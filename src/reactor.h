@@ -9,6 +9,11 @@ extern void mock_assert(const int result, const char* const expression,
     mock_assert((int)(expression), #expression, __FILE__, __LINE__);
 #endif
 
+#define REACTOR_VERSION       "1.0.0"
+#define REACTOR_VERSION_MAJOR 1
+#define REACTOR_VERSION_MINOR 0
+#define REACTOR_VERSION_PATCH 0
+
 #include "reactor/buffer.h"
 #include "reactor/vector.h"
 #include "reactor/pool.h"
