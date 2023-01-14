@@ -4,7 +4,10 @@ AM_LDFLAGS			= -static
 LDADD				= ../libreactor.la
 
 bin_PROGRAMS 			= \
-httpd-minimal
+httpd-minimal \
+http-client \
+stream \
+next
 
 #tls_server_raw_LDADD	= $(LDADD) -lssl -lcrypto
 

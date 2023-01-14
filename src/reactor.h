@@ -9,6 +9,9 @@ extern void mock_assert(const int result, const char* const expression,
     mock_assert((int)(expression), #expression, __FILE__, __LINE__);
 #endif
 
+#include "reactor/buffer.h"
+#include "reactor/vector.h"
+#include "reactor/pool.h"
 #include "reactor/reactor.h"
 
 #endif /* REACTOR_H */

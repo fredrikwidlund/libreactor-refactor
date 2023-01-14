@@ -6,7 +6,7 @@
 #include <time.h>
 #include <sys/socket.h>
 
-#define REACTOR_RING_SIZE 1024
+#define REACTOR_RING_SIZE 4096
 
 typedef struct reactor_event  reactor_event;
 typedef struct reactor_user   reactor_user;
@@ -17,7 +17,7 @@ struct reactor_event
 {
   void            *state;
   int              type;
-  uint64_t         value;
+  uint64_t         data;
 };
 
 struct reactor_user
@@ -26,15 +26,33 @@ struct reactor_user
   void             *state;
 };
 
-void       reactor_construct(void);
-void       reactor_destruct(void);
-void       reactor_loop(void);
-void       reactor_loop_once(void);
+reactor_event reactor_event_define(void *, int, uint64_t);
+reactor_user  reactor_user_define(reactor_callback *, void *);
 
-reactor_id reactor_recv(reactor_callback *, void *, int, void *, size_t, int);
-reactor_id reactor_read(reactor_callback *, void *, int, void *, size_t, size_t);
-reactor_id reactor_send(reactor_callback *, void *, int, const void *, size_t, int);
-reactor_id reactor_timeout(reactor_callback *, void *, struct timespec *, int, int);
-reactor_id reactor_accept(reactor_callback *, void *, int, struct sockaddr *, socklen_t *, int);
+void          reactor_construct(void);
+void          reactor_destruct(void);
+void          reactor_loop(void);
+void          reactor_loop_once(void);
+void          reactor_call(reactor_user *, int, uint64_t);
+void          reactor_cancel(reactor_id, reactor_callback *, void *);
+
+reactor_id    reactor_next(reactor_callback *, void *);
+reactor_id    reactor_async_cancel(reactor_callback *, void *, uint64_t);
+reactor_id    reactor_nop(reactor_callback *, void *);
+/* reactor_readv */
+/* reactor_writev */
+reactor_id    reactor_fsync(reactor_callback *, void *, int);
+/* reactor_poll */
+/* reactor_poll_multi */
+/* reactor_poll_remove */
+/* reactor_epoll_ctl */
+reactor_id    reactor_send(reactor_callback *, void *, int, const void *, size_t, int);
+reactor_id    reactor_recv(reactor_callback *, void *, int, void *, size_t, int);
+reactor_id    reactor_read(reactor_callback *, void *, int, void *, size_t, size_t);
+reactor_id    reactor_write(reactor_callback *, void *, int, const void *, size_t, size_t);
+reactor_id    reactor_timeout(reactor_callback *, void *, struct timespec *, int, int);
+reactor_id    reactor_connect(reactor_callback *, void *, int, struct sockaddr *, socklen_t);
+reactor_id    reactor_accept(reactor_callback *, void *, int, struct sockaddr *, socklen_t *, int);
+reactor_id    reactor_close(reactor_callback *, void *, int);
 
 #endif /* REACTOR_REACTOR_H */

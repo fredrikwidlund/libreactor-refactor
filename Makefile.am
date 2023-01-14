@@ -4,10 +4,18 @@ AM_CFLAGS			= -std=gnu2x -g -O3 -flto -march=native -I$(srcdir)/src -fPIC
 AM_LDFLAGS			= -static
 
 SOURCE_FILES = \
-src/reactor/reactor.c
+src/reactor/reactor.c \
+src/reactor/list.c \
+src/reactor/buffer.c \
+src/reactor/vector.c \
+src/reactor/pool.c
 
 HEADER_FILES = \
-src/reactor/reactor.h
+src/reactor/reactor.h \
+src/reactor/list.h \
+src/reactor/buffer.h \
+src/reactor/vector.h \
+src/reactor/pool.h
 
 lib_LTLIBRARIES 		= libreactor.la
 libreactor_la_SOURCES 		= $(SOURCE_FILES) $(HEADER_FILES)
@@ -42,8 +50,8 @@ libreactor_test_a_SOURCES 	= $(SOURCE_FILES) $(HEADER_FILES)
 
 check_PROGRAMS 			=
 
-check_PROGRAMS			+= test/basic
-test_basic_CFLAGS 		= $(CHECK_CFLAGS)
-test_basic_LDADD 		= $(CHECK_LDADD)
+check_PROGRAMS			+= test/reactor
+test_reactor_CFLAGS 		= $(CHECK_CFLAGS)
+test_reactor_LDADD 		= $(CHECK_LDADD)
 
 TESTS 				= $(check_PROGRAMS) test/valgrind.sh test/coverage.sh

@@ -47,7 +47,7 @@ static int server_socket(int port)
 static void recv_callback(reactor_event *event)
 {
   struct connection *connection = event->state;
-  int result = event->value;
+  int result = event->data;
 
   if (result <= 0)
   {
@@ -65,8 +65,7 @@ static void accept_callback(reactor_event *event)
   struct state *state = event->state;
   struct connection *connection = malloc(sizeof *connection);
 
-  connection->socket = event->value;
-  printf("accept %d\n", connection->socket);
+  connection->socket = event->data;
   reactor_recv(recv_callback, connection, connection->socket, connection->input, sizeof connection->input, 0);
   reactor_accept(accept_callback, state, state->socket, NULL, NULL, 0);
 }
@@ -75,8 +74,9 @@ int main()
 {
   struct state state = {0};
 
+  reactor_construct();
   state.socket = server_socket(80);
-
   reactor_accept(accept_callback, &state, state.socket, NULL, NULL, 0);
   reactor_loop();
+  reactor_destruct();
 }

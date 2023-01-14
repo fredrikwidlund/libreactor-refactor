@@ -119,60 +119,75 @@ static void reactor_ring_update(reactor_ring *ring)
   assert(n == to_submit);
 }
 
+/* reactor_event */
+
+reactor_event reactor_event_define(void *state, int type, uint64_t data)
+{
+  return (reactor_event) {.state = state, .type = type, .data = data};
+}
+
+/* reactor user */
+
+static void reactor_user_callback(reactor_event *event)
+{
+  (void) event;
+}
+
+reactor_user reactor_user_define(reactor_callback *callback, void *state)
+{
+  return (reactor_user) {.callback = callback ? callback : reactor_user_callback, .state = state};
+}
+
 /* reactor */
 
 struct reactor
 {
   size_t               ref;
-  size_t               users;
   reactor_ring         ring;
+  pool                 users;
+  vector               next;
 };
 
 static __thread struct reactor reactor = {0};
 
-static void reactor_default_callback(reactor_event event)
+static reactor_user *reactor_alloc_user(reactor_callback *callback, void *state)
 {
-  (void) event;
-}
+  reactor_user *user = pool_malloc(&reactor.users);
 
-static reactor_user *reactor_user_create(reactor_callback *callback, void *state)
-{
-  reactor_user *user = malloc(sizeof *user);
-
-  *user = (reactor_user) {.callback = callback ? callback : reactor_default_callback, .state = state};
-  reactor.users++;
+  *user = reactor_user_define(callback, state);
   return user;
 }
 
-static void reactor_user_destroy(reactor_user *user)
+static void reactor_free_user(reactor_user *user)
 {
-  free(user);
-  reactor.users--;
+  pool_free(&reactor.users, user);
 }
 
-__attribute__ ((constructor))
 void reactor_construct(void)
 {
   if (!reactor.ref)
   {
     reactor_ring_construct(&reactor.ring, REACTOR_RING_SIZE);
+    pool_construct(&reactor.users, sizeof(reactor_user));
+    vector_construct(&reactor.next, sizeof (reactor_user *));
   }
   reactor.ref++;
 }
 
-__attribute__ ((destructor))
 void reactor_destruct(void)
 {
   reactor.ref--;
   if (!reactor.ref)
   {
     reactor_ring_destruct(&reactor.ring);
+    pool_destruct(&reactor.users);
+    vector_destruct(&reactor.next, NULL);
   }
 }
 
 void reactor_loop(void)
 {
-  while (reactor.users)
+  while (pool_size(&reactor.users))
     reactor_loop_once();
 }
 
@@ -180,52 +195,94 @@ void reactor_loop_once(void)
 {
   struct io_uring_cqe *cqe;
   reactor_user *user;
+  size_t i;
 
-  if (!reactor.users)
-    return;
-
-  reactor_ring_update(&reactor.ring);
-  while (1)
+  if (vector_size(&reactor.next))
   {
-    cqe = reactor_ring_cqe(&reactor.ring);
-    if (!cqe)
-      break;
+    for (i = 0; i < vector_size(&reactor.next); i++)
+    {
+      user = *(reactor_user **) vector_at(&reactor.next, i);
+      reactor_call(user, 0, 0);
+      reactor_free_user(user);
+    }
+    vector_clear(&reactor.next, NULL);
+  }
 
-    user = (reactor_user *) cqe->user_data;
-    user->callback((reactor_event[]){{.state = user->state, 0, cqe->res}});
-    reactor_user_destroy(user);
-    // XXX add if (!(cqe->flags & IORING_CQE_F_MORE))  when IORING_POLL_ADD_MULTI is implemented
+  if (pool_size(&reactor.users))
+  {
+    reactor_ring_update(&reactor.ring);
+    while (1)
+    {
+      cqe = reactor_ring_cqe(&reactor.ring);
+      if (!cqe)
+        break;
+
+      user = (reactor_user *) cqe->user_data;
+      reactor_call(user, 0, cqe->res);
+      /* if (!(cqe->flags & IORING_CQE_F_MORE)) */
+      reactor_free_user(user);
+    }
   }
 }
 
-reactor_id reactor_recv(reactor_callback *callback, void *state, int fd, void *base, size_t size, int flags)
+void reactor_call(reactor_user *user, int type, uint64_t value)
 {
-  reactor_user *user = reactor_user_create(callback, state);
+  user->callback((reactor_event[]){reactor_event_define(user->state, type, value)});
+}
+
+void reactor_cancel(reactor_id id, reactor_callback *callback, void *state)
+{
+  reactor_user *user = (reactor_user *) (id & ~0x01ULL);
+  int local = id & 0x01ULL;
+
+  *user = reactor_user_define(callback, state);
+  if (!local)
+    reactor_async_cancel(NULL, NULL, (uint64_t) user);
+}
+
+/* XXX simplify by using reactor_nop instead? */
+reactor_id reactor_next(reactor_callback *callback, void *state)
+{
+  reactor_id id = (reactor_id) reactor_alloc_user(callback, state);
+
+  vector_push_back(&reactor.next, &id);
+  return id | 0x01ULL; /* mark as local */
+}
+
+reactor_id reactor_async_cancel(reactor_callback *callback, void *state, uint64_t user_data)
+{
+  reactor_user *user = reactor_alloc_user(callback, state);
 
   *reactor_ring_sqe(&reactor.ring) = (struct io_uring_sqe)
     {
-      .fd = fd,
-      .opcode = IORING_OP_RECV,
-      .addr = (uintptr_t) base,
-      .msg_flags = flags,
-      .len = size,
+      .addr = (uintptr_t) user_data,
       .user_data = (uint64_t) user
     };
 
   return (reactor_id) user;
 }
 
-reactor_id reactor_read(reactor_callback *callback, void *state, int fd, void *base, size_t size, size_t offset)
+reactor_id reactor_nop(reactor_callback *callback, void *state)
 {
-  reactor_user *user = reactor_user_create(callback, state);
+  reactor_user *user = reactor_alloc_user(callback, state);
+
+  *reactor_ring_sqe(&reactor.ring) = (struct io_uring_sqe)
+    {
+      .opcode = IORING_OP_NOP,
+      .user_data = (uint64_t) user
+    };
+
+  return (reactor_id) user;
+}
+
+reactor_id reactor_fsync(reactor_callback *callback, void *state, int fd)
+{
+  reactor_user *user = reactor_alloc_user(callback, state);
 
   *reactor_ring_sqe(&reactor.ring) = (struct io_uring_sqe)
     {
       .fd = fd,
-      .opcode = IORING_OP_READ,
-      .addr = (uintptr_t) base,
-      .off = offset,
-      .len = size,
+      .opcode = IORING_OP_FSYNC,
       .user_data = (uint64_t) user
     };
 
@@ -234,7 +291,7 @@ reactor_id reactor_read(reactor_callback *callback, void *state, int fd, void *b
 
 reactor_id reactor_send(reactor_callback *callback, void *state, int fd, const void *base, size_t size, int flags)
 {
-  reactor_user *user = reactor_user_create(callback, state);
+  reactor_user *user = reactor_alloc_user(callback, state);
 
   *reactor_ring_sqe(&reactor.ring) = (struct io_uring_sqe)
     {
@@ -249,9 +306,26 @@ reactor_id reactor_send(reactor_callback *callback, void *state, int fd, const v
   return (reactor_id) user;
 }
 
+reactor_id reactor_recv(reactor_callback *callback, void *state, int fd, void *base, size_t size, int flags)
+{
+  reactor_user *user = reactor_alloc_user(callback, state);
+
+  *reactor_ring_sqe(&reactor.ring) = (struct io_uring_sqe)
+    {
+      .fd = fd,
+      .opcode = IORING_OP_RECV,
+      .addr = (uintptr_t) base,
+      .msg_flags = flags,
+      .len = size,
+      .user_data = (uint64_t) user
+    };
+
+  return (reactor_id) user;
+}
+
 reactor_id reactor_timeout(reactor_callback *callback, void *state, struct timespec *tv, int count, int flags)
 {
-  reactor_user *user = reactor_user_create(callback, state);
+  reactor_user *user = reactor_alloc_user(callback, state);
 
   *reactor_ring_sqe(&reactor.ring) = (struct io_uring_sqe)
     {
@@ -266,9 +340,59 @@ reactor_id reactor_timeout(reactor_callback *callback, void *state, struct times
   return (reactor_id) user;
 }
 
+reactor_id reactor_read(reactor_callback *callback, void *state, int fd, void *base, size_t size, size_t offset)
+{
+  reactor_user *user = reactor_alloc_user(callback, state);
+
+  *reactor_ring_sqe(&reactor.ring) = (struct io_uring_sqe)
+    {
+      .fd = fd,
+      .opcode = IORING_OP_READ,
+      .addr = (uintptr_t) base,
+      .off = offset,
+      .len = size,
+      .user_data = (uint64_t) user
+    };
+
+  return (reactor_id) user;
+}
+
+reactor_id reactor_write(reactor_callback *callback, void *state, int fd, const void *base, size_t size, size_t offset)
+{
+  reactor_user *user = reactor_alloc_user(callback, state);
+
+  *reactor_ring_sqe(&reactor.ring) = (struct io_uring_sqe)
+    {
+      .fd = fd,
+      .opcode = IORING_OP_WRITE,
+      .addr = (uintptr_t) base,
+      .off = offset,
+      .len = size,
+      .user_data = (uint64_t) user
+    };
+
+  return (reactor_id) user;
+}
+
+reactor_id reactor_connect(reactor_callback *callback, void *state, int fd, struct sockaddr *addr, socklen_t addrlen)
+{
+  reactor_user *user = reactor_alloc_user(callback, state);
+
+  *reactor_ring_sqe(&reactor.ring) = (struct io_uring_sqe)
+    {
+      .fd = fd,
+      .opcode = IORING_OP_CONNECT,
+      .addr = (uint64_t) addr,
+      .off = (uint64_t) addrlen,
+      .user_data = (uint64_t) user
+    };
+
+  return (reactor_id) user;
+}
+
 reactor_id reactor_accept(reactor_callback *callback, void *state, int fd, struct sockaddr *addr, socklen_t *addrlen, int flags)
 {
-  reactor_user *user = reactor_user_create(callback, state);
+  reactor_user *user = reactor_alloc_user(callback, state);
 
   *reactor_ring_sqe(&reactor.ring) = (struct io_uring_sqe)
     {
@@ -277,6 +401,20 @@ reactor_id reactor_accept(reactor_callback *callback, void *state, int fd, struc
       .addr = (uint64_t) addr,
       .addr2 = (uint64_t) addrlen,
       .accept_flags = flags,
+      .user_data = (uint64_t) user
+    };
+
+  return (reactor_id) user;
+}
+
+reactor_id reactor_close(reactor_callback *callback, void *state, int fd)
+{
+  reactor_user *user = reactor_alloc_user(callback, state);
+
+  *reactor_ring_sqe(&reactor.ring) = (struct io_uring_sqe)
+    {
+      .fd = fd,
+      .opcode = IORING_OP_CLOSE,
       .user_data = (uint64_t) user
     };
 
