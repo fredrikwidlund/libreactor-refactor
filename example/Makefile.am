@@ -7,7 +7,8 @@ bin_PROGRAMS 			= \
 httpd-minimal \
 http-client \
 stream \
-next
+next \
+async
 
 #tls_server_raw_LDADD	= $(LDADD) -lssl -lcrypto
 

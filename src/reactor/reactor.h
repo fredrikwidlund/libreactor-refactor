@@ -8,6 +8,12 @@
 
 #define REACTOR_RING_SIZE 4096
 
+enum
+{
+  REACTOR_CALL,
+  REACTOR_RETURN
+};
+
 typedef struct reactor_event  reactor_event;
 typedef struct reactor_user   reactor_user;
 typedef uint64_t              reactor_id;
@@ -28,6 +34,7 @@ struct reactor_user
 
 reactor_event reactor_event_define(void *, int, uint64_t);
 reactor_user  reactor_user_define(reactor_callback *, void *);
+void          reactor_user_construct(reactor_user *, reactor_callback *, void *);
 
 void          reactor_construct(void);
 void          reactor_destruct(void);
@@ -36,6 +43,7 @@ void          reactor_loop_once(void);
 void          reactor_call(reactor_user *, int, uint64_t);
 void          reactor_cancel(reactor_id, reactor_callback *, void *);
 
+reactor_id    reactor_async(reactor_callback *, void *);
 reactor_id    reactor_next(reactor_callback *, void *);
 reactor_id    reactor_async_cancel(reactor_callback *, void *, uint64_t);
 reactor_id    reactor_nop(reactor_callback *, void *);

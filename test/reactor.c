@@ -44,6 +44,15 @@ static void test_loop(__attribute__((unused)) void **arg)
   reactor_loop_once();
 }
 
+static void test_async(__attribute__((unused)) void **arg)
+{
+  struct state state = {0};
+
+  reactor_async(callback, &state);
+  reactor_loop();
+  assert_int_equal(state.calls, 2);
+}
+
 static void test_next(__attribute__((unused)) void **arg)
 {
   reactor_next(NULL, NULL);
@@ -222,6 +231,7 @@ int main()
     {
       cmocka_unit_test(test_construct),
       cmocka_unit_test(test_loop),
+      cmocka_unit_test(test_async),
       cmocka_unit_test(test_next),
       cmocka_unit_test(test_cancel),
       cmocka_unit_test(test_nop),

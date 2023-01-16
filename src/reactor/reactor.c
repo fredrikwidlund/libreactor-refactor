@@ -2,6 +2,8 @@
 #include <stdlib.h>
 #include <assert.h>
 #include <unistd.h>
+#include <threads.h>
+#include <sys/eventfd.h>
 #include <sys/mman.h>
 #include <sys/syscall.h>
 #include <sys/socket.h>
@@ -138,7 +140,14 @@ reactor_user reactor_user_define(reactor_callback *callback, void *state)
   return (reactor_user) {.callback = callback ? callback : reactor_user_callback, .state = state};
 }
 
+void reactor_user_construct(reactor_user *user, reactor_callback *callback, void *state)
+{
+  *user = reactor_user_define(callback, state);
+}
+
 /* reactor */
+
+typedef struct reactor_async_state reactor_async_state;
 
 struct reactor
 {
@@ -146,6 +155,15 @@ struct reactor
   reactor_ring         ring;
   pool                 users;
   vector               next;
+};
+
+struct reactor_async_state
+{
+  reactor_user         user;
+  int                  signal;
+  reactor_id           read;
+  uint64_t             counter;
+  thrd_t               id;
 };
 
 static __thread struct reactor reactor = {0};
@@ -161,6 +179,26 @@ static reactor_user *reactor_alloc_user(reactor_callback *callback, void *state)
 static void reactor_free_user(reactor_user *user)
 {
   pool_free(&reactor.users, user);
+}
+
+static int reactor_async_call(void *arg)
+{
+  reactor_async_state *async = arg;
+  ssize_t n;
+
+  reactor_call(&async->user, REACTOR_CALL, 0);
+  n = write(async->signal, (uint64_t[]){1}, sizeof async->counter);
+  assert(n == sizeof async->counter);
+  return 0;
+}
+
+static void reactor_async_return(reactor_event *event)
+{
+  reactor_async_state *async = event->state;
+
+  reactor_call(&async->user, REACTOR_RETURN, 0);
+  (void) reactor_close(NULL, NULL, async->signal);
+  free(async);
 }
 
 void reactor_construct(void)
@@ -202,7 +240,7 @@ void reactor_loop_once(void)
     for (i = 0; i < vector_size(&reactor.next); i++)
     {
       user = *(reactor_user **) vector_at(&reactor.next, i);
-      reactor_call(user, 0, 0);
+      reactor_call(user, REACTOR_CALL, 0);
       reactor_free_user(user);
     }
     vector_clear(&reactor.next, NULL);
@@ -218,7 +256,7 @@ void reactor_loop_once(void)
         break;
 
       user = (reactor_user *) cqe->user_data;
-      reactor_call(user, 0, cqe->res);
+      reactor_call(user, REACTOR_CALL, cqe->res);
       /* if (!(cqe->flags & IORING_CQE_F_MORE)) */
       reactor_free_user(user);
     }
@@ -233,20 +271,35 @@ void reactor_call(reactor_user *user, int type, uint64_t value)
 void reactor_cancel(reactor_id id, reactor_callback *callback, void *state)
 {
   reactor_user *user = (reactor_user *) (id & ~0x01ULL);
-  int local = id & 0x01ULL;
+  int not_iouring = id & 0x01ULL;
 
   *user = reactor_user_define(callback, state);
-  if (!local)
+  if (!not_iouring)
     reactor_async_cancel(NULL, NULL, (uint64_t) user);
 }
 
-/* XXX simplify by using reactor_nop instead? */
+reactor_id reactor_async(reactor_callback *callback, void *state)
+{
+  reactor_async_state *async = malloc(sizeof *async);
+  reactor_id id = (reactor_id) async;
+  int e;
+
+  reactor_user_construct(&async->user, callback, state);
+  async->signal = eventfd(0, 0);
+  async->read = reactor_read(reactor_async_return, async, async->signal, &async->counter, sizeof async->counter, 0);
+  e = thrd_create(&async->id, reactor_async_call, async);
+  assert(e == 0);
+  e = thrd_detach(async->id);
+  assert(e == 0);
+  return id | 0x01ULL; /* mark as not iouring */
+}
+
 reactor_id reactor_next(reactor_callback *callback, void *state)
 {
   reactor_id id = (reactor_id) reactor_alloc_user(callback, state);
 
   vector_push_back(&reactor.next, &id);
-  return id | 0x01ULL; /* mark as local */
+  return id | 0x01ULL; /* mark as not iouring */
 }
 
 reactor_id reactor_async_cancel(reactor_callback *callback, void *state, uint64_t user_data)
