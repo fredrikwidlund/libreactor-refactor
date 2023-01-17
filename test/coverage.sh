@@ -1,6 +1,6 @@
 #!/bin/sh
 
-for file in reactor
+for file in reactor resolver
 do
     echo [$file]
     test=`gcov -b src/reactor/libreactor_test_a-$file | grep -A4 File.*$file`

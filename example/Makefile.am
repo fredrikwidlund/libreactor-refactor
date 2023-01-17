@@ -8,7 +8,8 @@ httpd-minimal \
 http-client \
 stream \
 next \
-async
+async \
+lookup
 
 #tls_server_raw_LDADD	= $(LDADD) -lssl -lcrypto
 

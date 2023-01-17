@@ -18,5 +18,6 @@ extern void mock_assert(const int result, const char* const expression,
 #include "reactor/vector.h"
 #include "reactor/pool.h"
 #include "reactor/reactor.h"
+#include "reactor/resolver.h"
 
 #endif /* REACTOR_H */
