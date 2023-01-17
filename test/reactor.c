@@ -38,6 +38,11 @@ static void test_destruct(__attribute__((unused)) void **arg)
   reactor_destruct();
 }
 
+static void test_now(__attribute__((unused)) void **arg)
+{
+  assert_true(reactor_now() == reactor_now());
+}
+
 static void test_loop(__attribute__((unused)) void **arg)
 {
   reactor_loop();
@@ -230,6 +235,7 @@ int main()
   const struct CMUnitTest tests[] =
     {
       cmocka_unit_test(test_construct),
+      cmocka_unit_test(test_now),
       cmocka_unit_test(test_loop),
       cmocka_unit_test(test_async),
       cmocka_unit_test(test_next),

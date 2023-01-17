@@ -155,6 +155,7 @@ struct reactor
   reactor_ring         ring;
   pool                 users;
   vector               next;
+  reactor_time         time;
 };
 
 struct reactor_async_state
@@ -223,6 +224,19 @@ void reactor_destruct(void)
   }
 }
 
+reactor_time reactor_now(void)
+{
+  struct timespec tv;
+
+  if (!reactor.time)
+  {
+    clock_gettime(CLOCK_REALTIME_COARSE, &tv);
+    reactor.time = (reactor_time) tv.tv_sec * 1000000000ULL + (reactor_time) tv.tv_nsec;;
+  }
+
+  return reactor.time;
+}
+
 void reactor_loop(void)
 {
   while (pool_size(&reactor.users))
@@ -248,6 +262,7 @@ void reactor_loop_once(void)
 
   if (pool_size(&reactor.users))
   {
+    reactor.time = 0;
     reactor_ring_update(&reactor.ring);
     while (1)
     {

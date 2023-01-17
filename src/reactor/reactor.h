@@ -16,6 +16,7 @@ enum
 
 typedef struct reactor_event  reactor_event;
 typedef struct reactor_user   reactor_user;
+typedef uint64_t              reactor_time;
 typedef uint64_t              reactor_id;
 typedef void                 (reactor_callback)(reactor_event *);
 
@@ -38,6 +39,7 @@ void          reactor_user_construct(reactor_user *, reactor_callback *, void *)
 
 void          reactor_construct(void);
 void          reactor_destruct(void);
+reactor_time  reactor_now(void);
 void          reactor_loop(void);
 void          reactor_loop_once(void);
 void          reactor_call(reactor_user *, int, uint64_t);
