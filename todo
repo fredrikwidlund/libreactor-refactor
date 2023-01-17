@@ -1,1 +1,3 @@
-* threading/async
+* notify
+* async resolver state
+* keep thread states in reactor list
