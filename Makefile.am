@@ -9,7 +9,8 @@ src/reactor/list.c \
 src/reactor/buffer.c \
 src/reactor/vector.c \
 src/reactor/pool.c \
-src/reactor/resolver.c
+src/reactor/resolver.c \
+src/reactor/timer.c
 
 HEADER_FILES = \
 src/reactor/reactor.h \
@@ -17,7 +18,8 @@ src/reactor/list.h \
 src/reactor/buffer.h \
 src/reactor/vector.h \
 src/reactor/pool.h \
-src/reactor/resolver.h
+src/reactor/resolver.h \
+src/reactor/timer.h
 
 lib_LTLIBRARIES 		= libreactor.la
 libreactor_la_SOURCES 		= $(SOURCE_FILES) $(HEADER_FILES)
@@ -59,5 +61,10 @@ test_reactor_LDADD 		= $(CHECK_LDADD)
 check_PROGRAMS			+= test/resolver
 test_resolver_CFLAGS 		= $(CHECK_CFLAGS)
 test_resolver_LDADD 		= $(CHECK_LDADD)
+
+
+check_PROGRAMS			+= test/timer
+test_timer_CFLAGS 		= $(CHECK_CFLAGS)
+test_timer_LDADD 		= $(CHECK_LDADD)
 
 TESTS 				= $(check_PROGRAMS) test/valgrind.sh test/coverage.sh

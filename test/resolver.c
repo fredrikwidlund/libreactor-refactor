@@ -22,7 +22,6 @@ static void callback(reactor_event *event)
 {
   struct state *state = event->state;
 
-  //assert_true(event->data);
   state->calls++;
 }
 
@@ -41,7 +40,7 @@ static void test_lookup(__attribute__((unused)) void **arg)
   resolver_destruct(&r);
 
   reactor_destruct();
-  //assert_int_equal(state.calls, 2);
+  assert_int_equal(state.calls, 2);
 }
 
 static void test_assert(__attribute__((unused)) void **arg)

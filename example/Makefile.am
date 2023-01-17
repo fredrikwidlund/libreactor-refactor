@@ -9,7 +9,8 @@ http-client \
 stream \
 next \
 async \
-lookup
+lookup \
+timer
 
 #tls_server_raw_LDADD	= $(LDADD) -lssl -lcrypto
 
