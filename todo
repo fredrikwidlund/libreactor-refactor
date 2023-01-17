@@ -1,3 +1,5 @@
 * notify
 * async resolver state
 * keep thread states in reactor list
+* pool tests
+* dynamic primitives
