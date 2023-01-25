@@ -343,6 +343,40 @@ reactor_id reactor_nop(reactor_callback *callback, void *state)
   return (reactor_id) user;
 }
 
+reactor_id reactor_readv(reactor_callback *callback, void *state, int fd, const struct iovec *iov, int iovcnt, size_t offset)
+{
+  reactor_user *user = reactor_alloc_user(callback, state);
+
+  *reactor_ring_sqe(&reactor.ring) = (struct io_uring_sqe)
+    {
+      .fd = fd,
+      .opcode = IORING_OP_READV,
+      .addr = (uintptr_t) iov,
+      .off = offset,
+      .len = iovcnt,
+      .user_data = (uint64_t) user
+    };
+
+  return (reactor_id) user;
+}
+
+reactor_id reactor_writev(reactor_callback *callback, void *state, int fd, const struct iovec *iov, int iovcnt, size_t offset)
+{
+  reactor_user *user = reactor_alloc_user(callback, state);
+
+  *reactor_ring_sqe(&reactor.ring) = (struct io_uring_sqe)
+    {
+      .fd = fd,
+      .opcode = IORING_OP_WRITEV,
+      .addr = (uintptr_t) iov,
+      .off = offset,
+      .len = iovcnt,
+      .user_data = (uint64_t) user
+    };
+
+  return (reactor_id) user;
+}
+
 reactor_id reactor_fsync(reactor_callback *callback, void *state, int fd)
 {
   reactor_user *user = reactor_alloc_user(callback, state);

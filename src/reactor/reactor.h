@@ -48,10 +48,12 @@ void          reactor_cancel(reactor_id, reactor_callback *, void *);
 reactor_id    reactor_async(reactor_callback *, void *);
 reactor_id    reactor_next(reactor_callback *, void *);
 reactor_id    reactor_async_cancel(reactor_callback *, void *, uint64_t);
+
 reactor_id    reactor_nop(reactor_callback *, void *);
-/* reactor_readv */
-/* reactor_writev */
+reactor_id    reactor_readv(reactor_callback *, void *, int, const struct iovec *, int, size_t);
+reactor_id    reactor_writev(reactor_callback *, void *, int, const struct iovec *, int, size_t);
 reactor_id    reactor_fsync(reactor_callback *, void *, int);
+
 /* reactor_poll */
 /* reactor_poll_multi */
 /* reactor_poll_remove */

@@ -3,6 +3,7 @@
 #include <signal.h>
 #include <unistd.h>
 #include <setjmp.h>
+#include <string.h>
 #include <errno.h>
 #include <limits.h>
 #include <sys/epoll.h>
@@ -77,6 +78,28 @@ static void test_nop(__attribute__((unused)) void **arg)
 {
   reactor_nop(NULL, NULL);
   reactor_loop();
+}
+
+static void test_readv_writev(__attribute__((unused)) void **arg)
+{
+  struct state state = {.value = 4};
+  char buffer[4] = "test";
+  struct iovec iov = {.iov_base = buffer, .iov_len = sizeof buffer};
+  int fd[2];
+
+  assert(socketpair(AF_UNIX, SOCK_STREAM, 0, fd) == 0);
+  reactor_writev(callback, &state, fd[1], &iov, 1, 0);
+  reactor_loop();
+
+  buffer[0] = 0;
+
+  reactor_readv(callback, &state, fd[0], &iov, 1, 0);
+  reactor_loop();
+  close(fd[0]);
+  close(fd[1]);
+
+  assert_int_equal(state.calls, 2);
+  assert_string_equal(buffer, "test");
 }
 
 static void test_fsync(__attribute__((unused)) void **arg)
@@ -241,6 +264,7 @@ int main()
       cmocka_unit_test(test_next),
       cmocka_unit_test(test_cancel),
       cmocka_unit_test(test_nop),
+      cmocka_unit_test(test_readv_writev),
       cmocka_unit_test(test_fsync),
       cmocka_unit_test(test_send),
       cmocka_unit_test(test_recv),
