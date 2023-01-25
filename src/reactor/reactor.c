@@ -272,8 +272,8 @@ void reactor_loop_once(void)
 
       user = (reactor_user *) cqe->user_data;
       reactor_call(user, REACTOR_CALL, cqe->res);
-      /* if (!(cqe->flags & IORING_CQE_F_MORE)) */
-      reactor_free_user(user);
+      if (!(cqe->flags & IORING_CQE_F_MORE))
+        reactor_free_user(user);
     }
   }
 }
@@ -386,6 +386,67 @@ reactor_id reactor_fsync(reactor_callback *callback, void *state, int fd)
       .fd = fd,
       .opcode = IORING_OP_FSYNC,
       .user_data = (uint64_t) user
+    };
+
+  return (reactor_id) user;
+}
+
+reactor_id reactor_poll_add(reactor_callback *callback, void *state, int fd, short int events)
+{
+  reactor_user *user = reactor_alloc_user(callback, state);
+
+  *reactor_ring_sqe(&reactor.ring) = (struct io_uring_sqe)
+    {
+      .fd = fd,
+      .opcode = IORING_OP_POLL_ADD,
+      .poll_events = events,
+      .user_data = (uint64_t) user
+    };
+
+  return (reactor_id) user;
+}
+
+reactor_id reactor_poll_add_multi(reactor_callback *callback, void *state, int fd, short int events)
+{
+  reactor_user *user = reactor_alloc_user(callback, state);
+
+  *reactor_ring_sqe(&reactor.ring) = (struct io_uring_sqe)
+    {
+      .fd = fd,
+      .opcode = IORING_OP_POLL_ADD,
+      .poll_events = events,
+      .len = IORING_POLL_ADD_MULTI,
+      .user_data = (uint64_t) user
+    };
+
+  return (reactor_id) user;
+}
+
+reactor_id reactor_poll_update(reactor_callback *callback, void *state, reactor_id id, short int events)
+{
+  reactor_user *user = reactor_alloc_user(callback, state);
+
+  *reactor_ring_sqe(&reactor.ring) = (struct io_uring_sqe)
+    {
+      .opcode = IORING_OP_POLL_REMOVE,
+      .len = IORING_POLL_UPDATE_EVENTS,
+      .poll_events = events,
+      .addr = id,
+      .user_data = (uint64_t) user
+    };
+
+  return (reactor_id) user;
+}
+
+reactor_id reactor_poll_remove(reactor_callback *callback, void *state, reactor_id id)
+{
+  reactor_user *user = reactor_alloc_user(callback, state);
+
+  *reactor_ring_sqe(&reactor.ring) = (struct io_uring_sqe)
+    {
+      .opcode = IORING_OP_POLL_REMOVE,
+      .addr = id,
+      .user_data =(uint64_t) user
     };
 
   return (reactor_id) user;

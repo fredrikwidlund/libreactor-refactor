@@ -6,6 +6,7 @@
 #include <string.h>
 #include <errno.h>
 #include <limits.h>
+#include <poll.h>
 #include <sys/epoll.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
@@ -23,7 +24,9 @@ static void callback(reactor_event *event)
 {
   struct state *state = event->state;
 
-  assert_int_equal((int) event->data, state->value);
+  printf("data %d\n", (int) event->data);
+  if (state->value)
+    assert_int_equal((int) event->data, state->value);
   state->calls++;
 }
 
@@ -100,6 +103,51 @@ static void test_readv_writev(__attribute__((unused)) void **arg)
 
   assert_int_equal(state.calls, 2);
   assert_string_equal(buffer, "test");
+}
+
+static void test_poll(__attribute__((unused)) void **arg)
+{
+  struct state state = {0};
+  int fd[2];
+  reactor_id id;
+
+  /* remove */
+  assert(socketpair(AF_UNIX, SOCK_STREAM, 0, fd) == 0);
+  id = reactor_poll_add(callback, &state, fd[0], POLLOUT);
+  reactor_poll_remove(callback, &state, id);
+  reactor_loop();
+  assert_int_equal(state.calls, 2);
+
+  /* add multi poll */
+  reactor_write(NULL, NULL, fd[1], "", 1, 0);
+  id = reactor_poll_add_multi(callback, &state, fd[0], POLLIN);
+  reactor_loop_once();
+  assert_int_equal(state.calls, 3);
+
+  /* receive multiple events */
+  reactor_write(NULL, NULL, fd[1], "", 1, 0);
+  reactor_loop_once();
+  assert_int_equal(state.calls, 4);
+
+  /* remove multi */
+  reactor_poll_remove(callback, &state, id);
+  reactor_loop();
+  assert_int_equal(state.calls, 6);
+
+  /* update events */
+  id = reactor_poll_add_multi(callback, &state, fd[0], POLLIN);
+  reactor_loop_once();
+  reactor_poll_update(NULL, NULL, id, POLLOUT);
+  state.value = 4;
+  reactor_loop_once();
+
+  /* remove multi */
+  reactor_poll_remove(NULL, NULL, id);
+  state.value = 0;
+  reactor_loop();
+
+  close(fd[0]);
+  close(fd[1]);
 }
 
 static void test_fsync(__attribute__((unused)) void **arg)
@@ -266,6 +314,7 @@ int main()
       cmocka_unit_test(test_nop),
       cmocka_unit_test(test_readv_writev),
       cmocka_unit_test(test_fsync),
+      cmocka_unit_test(test_poll),
       cmocka_unit_test(test_send),
       cmocka_unit_test(test_recv),
       cmocka_unit_test(test_timeout),

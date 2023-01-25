@@ -53,8 +53,11 @@ reactor_id    reactor_nop(reactor_callback *, void *);
 reactor_id    reactor_readv(reactor_callback *, void *, int, const struct iovec *, int, size_t);
 reactor_id    reactor_writev(reactor_callback *, void *, int, const struct iovec *, int, size_t);
 reactor_id    reactor_fsync(reactor_callback *, void *, int);
+reactor_id    reactor_poll_add(reactor_callback *, void *, int, short int);
+reactor_id    reactor_poll_add_multi(reactor_callback *, void *, int, short int);
+reactor_id    reactor_poll_update(reactor_callback *, void *, reactor_id, short int);
+reactor_id    reactor_poll_remove(reactor_callback *, void *, reactor_id);
 
-/* reactor_poll */
 /* reactor_poll_multi */
 /* reactor_poll_remove */
 /* reactor_epoll_ctl */
