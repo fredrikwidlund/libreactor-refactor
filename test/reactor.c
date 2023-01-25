@@ -24,7 +24,6 @@ static void callback(reactor_event *event)
 {
   struct state *state = event->state;
 
-  printf("data %d\n", (int) event->data);
   if (state->value)
     assert_int_equal((int) event->data, state->value);
   state->calls++;
@@ -148,6 +147,25 @@ static void test_poll(__attribute__((unused)) void **arg)
 
   close(fd[0]);
   close(fd[1]);
+}
+
+static void test_epoll_ctl(__attribute__((unused)) void **arg)
+{
+  struct state state = {.value = 0};
+  int epoll_fd, fd[2];
+  struct epoll_event event = {.events = EPOLLOUT | EPOLLET};
+
+  epoll_fd = epoll_create(64);
+  assert_true(epoll_fd >= 0);
+  assert(socketpair(AF_UNIX, SOCK_STREAM, 0, fd) == 0);
+  reactor_epoll_ctl(callback, &state, epoll_fd, EPOLL_CTL_ADD, fd[0], &event);
+  reactor_loop();
+  assert_true(epoll_wait(epoll_fd, &event, 1, 0) == 1);
+  assert_int_equal(event.events, EPOLLOUT);
+  close(fd[0]);
+  close(fd[1]);
+  close(epoll_fd);
+  assert_int_equal(state.calls, 1);
 }
 
 static void test_fsync(__attribute__((unused)) void **arg)
@@ -315,6 +333,7 @@ int main()
       cmocka_unit_test(test_readv_writev),
       cmocka_unit_test(test_fsync),
       cmocka_unit_test(test_poll),
+      cmocka_unit_test(test_epoll_ctl),
       cmocka_unit_test(test_send),
       cmocka_unit_test(test_recv),
       cmocka_unit_test(test_timeout),

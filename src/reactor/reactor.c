@@ -7,6 +7,7 @@
 #include <sys/mman.h>
 #include <sys/syscall.h>
 #include <sys/socket.h>
+#include <sys/epoll.h>
 #include <linux/io_uring.h>
 
 #include "../reactor.h"
@@ -432,6 +433,23 @@ reactor_id reactor_poll_update(reactor_callback *callback, void *state, reactor_
       .len = IORING_POLL_UPDATE_EVENTS,
       .poll_events = events,
       .addr = id,
+      .user_data = (uint64_t) user
+    };
+
+  return (reactor_id) user;
+}
+
+reactor_id reactor_epoll_ctl(reactor_callback *callback, void *state, int epoll_fd, int op, int fd, struct epoll_event *event)
+{
+  reactor_user *user = reactor_alloc_user(callback, state);
+
+  *reactor_ring_sqe(&reactor.ring) = (struct io_uring_sqe)
+    {
+      .opcode = IORING_OP_EPOLL_CTL,
+      .fd = epoll_fd,
+      .addr = (uint64_t) event,
+      .len = op,
+      .off = fd,
       .user_data = (uint64_t) user
     };
 

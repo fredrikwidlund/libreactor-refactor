@@ -5,6 +5,7 @@
 #include <stddef.h>
 #include <time.h>
 #include <sys/socket.h>
+#include <sys/epoll.h>
 
 #define REACTOR_RING_SIZE 4096
 
@@ -57,10 +58,7 @@ reactor_id    reactor_poll_add(reactor_callback *, void *, int, short int);
 reactor_id    reactor_poll_add_multi(reactor_callback *, void *, int, short int);
 reactor_id    reactor_poll_update(reactor_callback *, void *, reactor_id, short int);
 reactor_id    reactor_poll_remove(reactor_callback *, void *, reactor_id);
-
-/* reactor_poll_multi */
-/* reactor_poll_remove */
-/* reactor_epoll_ctl */
+reactor_id    reactor_epoll_ctl(reactor_callback *, void *, int, int, int, struct epoll_event *);
 reactor_id    reactor_send(reactor_callback *, void *, int, const void *, size_t, int);
 reactor_id    reactor_recv(reactor_callback *, void *, int, void *, size_t, int);
 reactor_id    reactor_read(reactor_callback *, void *, int, void *, size_t, size_t);
