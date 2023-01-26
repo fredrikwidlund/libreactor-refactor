@@ -60,11 +60,9 @@ reactor_id    reactor_poll_update(reactor_callback *, void *, reactor_id, short 
 reactor_id    reactor_poll_remove(reactor_callback *, void *, reactor_id);
 reactor_id    reactor_epoll_ctl(reactor_callback *, void *, int, int, int, struct epoll_event *);
 reactor_id    reactor_sync_file_range(reactor_callback *, void *, int, uint64_t, uint64_t, int);
+reactor_id    reactor_sendmsg(reactor_callback *, void *, int, const struct msghdr *, int);
+reactor_id    reactor_recvmsg(reactor_callback *, void *, int, struct msghdr *, int);
 
-/*
-IORING_OP_SENDMSG
-IORING_OP_RECVMSG
-*/
 reactor_id    reactor_send(reactor_callback *, void *, int, const void *, size_t, int);
 reactor_id    reactor_recv(reactor_callback *, void *, int, void *, size_t, int);
 reactor_id    reactor_timeout(reactor_callback *, void *, struct timespec *, int, int);

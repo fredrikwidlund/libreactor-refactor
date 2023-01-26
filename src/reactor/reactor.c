@@ -488,6 +488,38 @@ reactor_id reactor_sync_file_range(reactor_callback *callback, void *state, int 
   return (reactor_id) user;
 }
 
+reactor_id reactor_sendmsg(reactor_callback *callback, void *state, int socket, const struct msghdr *message, int flags)
+{
+  reactor_user *user = reactor_alloc_user(callback, state);
+
+  *reactor_ring_sqe(&reactor.ring) = (struct io_uring_sqe)
+    {
+      .opcode = IORING_OP_SENDMSG,
+      .fd = socket,
+      .addr = (uint64_t) message,
+      .msg_flags = flags,
+      .user_data = (uint64_t) user
+    };
+
+  return (reactor_id) user;
+}
+
+reactor_id reactor_recvmsg(reactor_callback *callback, void *state, int socket, struct msghdr *message, int flags)
+{
+  reactor_user *user = reactor_alloc_user(callback, state);
+
+  *reactor_ring_sqe(&reactor.ring) = (struct io_uring_sqe)
+    {
+      .opcode = IORING_OP_RECVMSG,
+      .fd = socket,
+      .addr = (uint64_t) message,
+      .msg_flags = flags,
+      .user_data = (uint64_t) user
+    };
+
+  return (reactor_id) user;
+}
+
 reactor_id reactor_send(reactor_callback *callback, void *state, int fd, const void *base, size_t size, int flags)
 {
   reactor_user *user = reactor_alloc_user(callback, state);

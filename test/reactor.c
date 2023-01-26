@@ -104,6 +104,12 @@ static void test_readv_writev(__attribute__((unused)) void **arg)
   assert_string_equal(buffer, "test");
 }
 
+static void test_fsync(__attribute__((unused)) void **arg)
+{
+  reactor_fsync(NULL, NULL, 0);
+  reactor_loop();
+}
+
 static void test_poll(__attribute__((unused)) void **arg)
 {
   struct state state = {0};
@@ -180,10 +186,27 @@ static void test_sync_file_range(__attribute__((unused)) void **arg)
   assert_true(fclose(f) == 0);
 }
 
-static void test_fsync(__attribute__((unused)) void **arg)
+static void test_recvmsg_sendmsg(__attribute__((unused)) void **arg)
 {
-  reactor_fsync(NULL, NULL, 0);
+  struct state state = {.value = 4};
+  char buffer[4] = "test";
+  struct iovec iov = {.iov_base = buffer, .iov_len = sizeof buffer};
+  struct msghdr message = {.msg_iov = &iov, .msg_iovlen = 1};
+  int fd[2];
+
+  assert(socketpair(AF_UNIX, SOCK_STREAM, 0, fd) == 0);
+  reactor_sendmsg(callback, &state, fd[1], &message, 0);
   reactor_loop();
+
+  buffer[0] = 0;
+
+  reactor_recvmsg(callback, &state, fd[0], &message, 0);
+  reactor_loop();
+  close(fd[0]);
+  close(fd[1]);
+
+  assert_int_equal(state.calls, 2);
+  assert_string_equal(buffer, "test");
 }
 
 static void test_send(__attribute__((unused)) void **arg)
@@ -347,6 +370,7 @@ int main()
       cmocka_unit_test(test_poll),
       cmocka_unit_test(test_epoll_ctl),
       cmocka_unit_test(test_sync_file_range),
+      cmocka_unit_test(test_recvmsg_sendmsg),
       cmocka_unit_test(test_send),
       cmocka_unit_test(test_recv),
       cmocka_unit_test(test_timeout),
