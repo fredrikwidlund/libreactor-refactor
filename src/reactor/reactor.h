@@ -62,14 +62,15 @@ reactor_id    reactor_epoll_ctl(reactor_callback *, void *, int, int, int, struc
 reactor_id    reactor_sync_file_range(reactor_callback *, void *, int, uint64_t, uint64_t, int);
 reactor_id    reactor_sendmsg(reactor_callback *, void *, int, const struct msghdr *, int);
 reactor_id    reactor_recvmsg(reactor_callback *, void *, int, struct msghdr *, int);
-
 reactor_id    reactor_send(reactor_callback *, void *, int, const void *, size_t, int);
 reactor_id    reactor_recv(reactor_callback *, void *, int, void *, size_t, int);
 reactor_id    reactor_timeout(reactor_callback *, void *, struct timespec *, int, int);
+reactor_id    reactor_accept(reactor_callback *, void *, int, struct sockaddr *, socklen_t *, int);
 reactor_id    reactor_read(reactor_callback *, void *, int, void *, size_t, size_t);
 reactor_id    reactor_write(reactor_callback *, void *, int, const void *, size_t, size_t);
 reactor_id    reactor_connect(reactor_callback *, void *, int, struct sockaddr *, socklen_t);
-reactor_id    reactor_accept(reactor_callback *, void *, int, struct sockaddr *, socklen_t *, int);
+reactor_id    reactor_fallocate(reactor_callback *, void *, int, int, uint64_t, uint64_t);
+
 reactor_id    reactor_close(reactor_callback *, void *, int);
 
 #endif /* REACTOR_REACTOR_H */

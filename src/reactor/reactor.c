@@ -571,6 +571,23 @@ reactor_id reactor_timeout(reactor_callback *callback, void *state, struct times
   return (reactor_id) user;
 }
 
+reactor_id reactor_accept(reactor_callback *callback, void *state, int fd, struct sockaddr *addr, socklen_t *addrlen, int flags)
+{
+  reactor_user *user = reactor_alloc_user(callback, state);
+
+  *reactor_ring_sqe(&reactor.ring) = (struct io_uring_sqe)
+    {
+      .fd = fd,
+      .opcode = IORING_OP_ACCEPT,
+      .addr = (uint64_t) addr,
+      .addr2 = (uint64_t) addrlen,
+      .accept_flags = flags,
+      .user_data = (uint64_t) user
+    };
+
+  return (reactor_id) user;
+}
+
 reactor_id reactor_read(reactor_callback *callback, void *state, int fd, void *base, size_t size, size_t offset)
 {
   reactor_user *user = reactor_alloc_user(callback, state);
@@ -621,17 +638,17 @@ reactor_id reactor_connect(reactor_callback *callback, void *state, int fd, stru
   return (reactor_id) user;
 }
 
-reactor_id reactor_accept(reactor_callback *callback, void *state, int fd, struct sockaddr *addr, socklen_t *addrlen, int flags)
+reactor_id reactor_fallocate(reactor_callback *callback, void *state, int fd, int mode, uint64_t offset, uint64_t len)
 {
   reactor_user *user = reactor_alloc_user(callback, state);
 
   *reactor_ring_sqe(&reactor.ring) = (struct io_uring_sqe)
     {
       .fd = fd,
-      .opcode = IORING_OP_ACCEPT,
-      .addr = (uint64_t) addr,
-      .addr2 = (uint64_t) addrlen,
-      .accept_flags = flags,
+      .opcode = IORING_OP_FALLOCATE,
+      .len = mode,
+      .off = offset,
+      .addr = len,
       .user_data = (uint64_t) user
     };
 
