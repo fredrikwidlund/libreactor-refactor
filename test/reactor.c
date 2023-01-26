@@ -168,6 +168,18 @@ static void test_epoll_ctl(__attribute__((unused)) void **arg)
   assert_int_equal(state.calls, 1);
 }
 
+static void test_sync_file_range(__attribute__((unused)) void **arg)
+{
+  struct state state = {.value = 0};
+  FILE *f = tmpfile();
+
+  assert_true(f);
+  reactor_sync_file_range(callback, &state, fileno(f), 0, 0, 0);
+  reactor_loop();
+  assert_int_equal(state.calls, 1);
+  assert_true(fclose(f) == 0);
+}
+
 static void test_fsync(__attribute__((unused)) void **arg)
 {
   reactor_fsync(NULL, NULL, 0);
@@ -334,6 +346,7 @@ int main()
       cmocka_unit_test(test_fsync),
       cmocka_unit_test(test_poll),
       cmocka_unit_test(test_epoll_ctl),
+      cmocka_unit_test(test_sync_file_range),
       cmocka_unit_test(test_send),
       cmocka_unit_test(test_recv),
       cmocka_unit_test(test_timeout),

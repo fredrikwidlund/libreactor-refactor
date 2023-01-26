@@ -439,6 +439,21 @@ reactor_id reactor_poll_update(reactor_callback *callback, void *state, reactor_
   return (reactor_id) user;
 }
 
+reactor_id reactor_poll_remove(reactor_callback *callback, void *state, reactor_id id)
+{
+  reactor_user *user = reactor_alloc_user(callback, state);
+
+  *reactor_ring_sqe(&reactor.ring) = (struct io_uring_sqe)
+    {
+      .opcode = IORING_OP_POLL_REMOVE,
+      .addr = id,
+      .user_data =(uint64_t) user
+    };
+
+  return (reactor_id) user;
+}
+
+
 reactor_id reactor_epoll_ctl(reactor_callback *callback, void *state, int epoll_fd, int op, int fd, struct epoll_event *event)
 {
   reactor_user *user = reactor_alloc_user(callback, state);
@@ -456,15 +471,18 @@ reactor_id reactor_epoll_ctl(reactor_callback *callback, void *state, int epoll_
   return (reactor_id) user;
 }
 
-reactor_id reactor_poll_remove(reactor_callback *callback, void *state, reactor_id id)
+reactor_id reactor_sync_file_range(reactor_callback *callback, void *state, int fd, uint64_t offset, uint64_t nbytes, int flags)
 {
   reactor_user *user = reactor_alloc_user(callback, state);
 
   *reactor_ring_sqe(&reactor.ring) = (struct io_uring_sqe)
     {
-      .opcode = IORING_OP_POLL_REMOVE,
-      .addr = id,
-      .user_data =(uint64_t) user
+      .opcode = IORING_OP_SYNC_FILE_RANGE,
+      .fd = fd,
+      .off = offset,
+      .len = nbytes,
+      .sync_range_flags = flags,
+      .user_data = (uint64_t) user
     };
 
   return (reactor_id) user;
