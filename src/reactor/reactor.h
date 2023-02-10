@@ -1,11 +1,13 @@
 #ifndef REACTOR_REACTOR_H
 #define REACTOR_REACTOR_H
 
-#include <stdint.h>
+#include <stdlib.h>
 #include <stddef.h>
 #include <time.h>
 #include <sys/socket.h>
 #include <sys/epoll.h>
+
+#include "../reactor.h"
 
 #define REACTOR_RING_SIZE 4096
 
@@ -49,7 +51,6 @@ void          reactor_cancel(reactor_id, reactor_callback *, void *);
 reactor_id    reactor_async(reactor_callback *, void *);
 reactor_id    reactor_next(reactor_callback *, void *);
 reactor_id    reactor_async_cancel(reactor_callback *, void *, uint64_t);
-
 reactor_id    reactor_nop(reactor_callback *, void *);
 reactor_id    reactor_readv(reactor_callback *, void *, int, const struct iovec *, int, size_t);
 reactor_id    reactor_writev(reactor_callback *, void *, int, const struct iovec *, int, size_t);
@@ -70,7 +71,9 @@ reactor_id    reactor_read(reactor_callback *, void *, int, void *, size_t, size
 reactor_id    reactor_write(reactor_callback *, void *, int, const void *, size_t, size_t);
 reactor_id    reactor_connect(reactor_callback *, void *, int, struct sockaddr *, socklen_t);
 reactor_id    reactor_fallocate(reactor_callback *, void *, int, int, uint64_t, uint64_t);
-
+/* fadvise */
+/* madvise */
+/* ... */
 reactor_id    reactor_close(reactor_callback *, void *, int);
 
 #endif /* REACTOR_REACTOR_H */

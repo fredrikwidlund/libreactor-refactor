@@ -6,11 +6,11 @@ LDADD				= ../libreactor.la
 bin_PROGRAMS 			= \
 httpd-minimal \
 http-client \
-stream \
 next \
 async \
 lookup \
-timer
+timer \
+queue
 
 #tls_server_raw_LDADD	= $(LDADD) -lssl -lcrypto
 

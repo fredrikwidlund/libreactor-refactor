@@ -1,8 +1,7 @@
 #include <stdlib.h>
-#include <stdint.h>
 #include <string.h>
 
-#include "buffer.h"
+#include "../reactor.h"
 
 static size_t buffer_roundup(size_t size)
 {
@@ -32,6 +31,11 @@ void buffer_destruct(buffer *b)
 }
 
 /* capacity */
+
+bool buffer_empty(buffer *b)
+{
+  return buffer_size(b) == 0;
+}
 
 size_t buffer_size(buffer *b)
 {
@@ -115,6 +119,11 @@ void buffer_clear(buffer *b)
 }
 
 /* element access */
+
+data buffer_data(buffer *b)
+{
+  return data_define(b->base, b->size);
+}
 
 void *buffer_base(buffer *b)
 {

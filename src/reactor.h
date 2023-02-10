@@ -14,6 +14,8 @@ extern void mock_assert(const int result, const char* const expression,
 #define REACTOR_VERSION_MINOR 0
 #define REACTOR_VERSION_PATCH 0
 
+#include "reactor/data.h"
+#include "reactor/list.h"
 #include "reactor/buffer.h"
 #include "reactor/vector.h"
 #include "reactor/pool.h"

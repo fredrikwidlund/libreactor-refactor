@@ -1,9 +1,6 @@
 #include <stdlib.h>
 
-#include "list.h"
-#include "vector.h"
-#include "pool.h"
-#include "reactor.h"
+#include "../reactor.h"
 
 #define POOL_CHUNK_SIZE 128
 

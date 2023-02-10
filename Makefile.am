@@ -5,6 +5,7 @@ AM_LDFLAGS			= -static
 
 SOURCE_FILES = \
 src/reactor/reactor.c \
+src/reactor/data.c \
 src/reactor/list.c \
 src/reactor/buffer.c \
 src/reactor/vector.c \
@@ -14,6 +15,7 @@ src/reactor/timer.c
 
 HEADER_FILES = \
 src/reactor/reactor.h \
+src/reactor/data.h \
 src/reactor/list.h \
 src/reactor/buffer.h \
 src/reactor/vector.h \
@@ -61,7 +63,6 @@ test_reactor_LDADD 		= $(CHECK_LDADD)
 check_PROGRAMS			+= test/resolver
 test_resolver_CFLAGS 		= $(CHECK_CFLAGS)
 test_resolver_LDADD 		= $(CHECK_LDADD)
-
 
 check_PROGRAMS			+= test/timer
 test_timer_CFLAGS 		= $(CHECK_CFLAGS)

@@ -1,8 +1,9 @@
 #ifndef REACTOR_VECTOR_H_INCLUDED
 #define REACTOR_VECTOR_H_INCLUDED
 
-#include <stdint.h>
-#include "buffer.h"
+#include <stdlib.h>
+
+#include "../reactor.h"
 
 typedef struct vector vector;
 typedef void          vector_release(void *);

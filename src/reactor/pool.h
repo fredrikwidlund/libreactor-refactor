@@ -1,8 +1,7 @@
 #ifndef REACTOR_POOL_H
 #define REACTOR_POOL_H
 
-#include "list.h"
-#include "vector.h"
+#include "../reactor.h"
 
 typedef struct pool pool;
 

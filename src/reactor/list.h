@@ -3,6 +3,8 @@
 
 #include <stdlib.h>
 
+#include "../reactor.h"
+
 #define list_foreach(l, o)         for ((o) = list_front(l); (o) != list_end(l); (o) = list_next(o))
 #define list_foreach_reverse(l, o) for ((o) = list_back(l); (o) != list_end(l); (o) = list_previous(o))
 

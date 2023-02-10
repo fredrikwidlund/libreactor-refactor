@@ -2,7 +2,9 @@
 #define REACTOR_BUFFER_H_INCLUDED
 
 #include <stdlib.h>
-#include <stdint.h>
+#include <stdbool.h>
+
+#include "../reactor.h"
 
 typedef struct buffer buffer;
 struct buffer
@@ -17,6 +19,7 @@ void    buffer_construct(buffer *);
 void    buffer_destruct(buffer *);
 
 /* capacity */
+bool    buffer_empty(buffer *);
 size_t  buffer_size(buffer *);
 size_t  buffer_capacity(buffer *);
 void    buffer_reserve(buffer *, size_t);
@@ -31,6 +34,7 @@ void    buffer_erase(buffer *, size_t, size_t);
 void    buffer_clear(buffer *);
 
 /* element access */
+data    buffer_data(buffer *);
 void   *buffer_base(buffer *);
 void   *buffer_at(buffer *, size_t);
 void   *buffer_end(buffer *);

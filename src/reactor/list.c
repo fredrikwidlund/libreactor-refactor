@@ -1,10 +1,10 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include <stdint.h>
 #include <stddef.h>
 #include <string.h>
 
-#include "list.h"
+
+#include "../reactor.h"
 
 /* internals */
 
