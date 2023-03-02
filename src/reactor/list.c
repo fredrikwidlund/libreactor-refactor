@@ -2,7 +2,7 @@
 #include <stdlib.h>
 #include <stddef.h>
 #include <string.h>
-
+#include <assert.h>
 
 #include "../reactor.h"
 
@@ -18,9 +18,7 @@ static list_item *list_item_new(void *object, size_t size)
   list_item *item;
 
   item = calloc(1, sizeof(list_item) + size);
-  if (!item)
-    abort();
-
+  assert(item != NULL);
   if (object)
     memcpy(item->object, object, size);
 

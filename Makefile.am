@@ -68,6 +68,26 @@ check_PROGRAMS			+= test/reactor
 test_reactor_CFLAGS 		= $(CHECK_CFLAGS)
 test_reactor_LDADD 		= $(CHECK_LDADD)
 
+check_PROGRAMS			+= test/data
+test_data_CFLAGS 		= $(CHECK_CFLAGS)
+test_data_LDADD 		= $(CHECK_LDADD)
+
+check_PROGRAMS			+= test/list
+test_list_CFLAGS 		= $(CHECK_CFLAGS)
+test_list_LDADD 		= $(CHECK_LDADD)
+
+check_PROGRAMS			+= test/buffer
+test_buffer_CFLAGS 		= $(CHECK_CFLAGS)
+test_buffer_LDADD 		= $(CHECK_LDADD)
+
+check_PROGRAMS			+= test/vector
+test_vector_CFLAGS 		= $(CHECK_CFLAGS)
+test_vector_LDADD 		= $(CHECK_LDADD)
+
+check_PROGRAMS			+= test/pool
+test_pool_CFLAGS 		= $(CHECK_CFLAGS)
+test_pool_LDADD 		= $(CHECK_LDADD)
+
 check_PROGRAMS			+= test/resolver
 test_resolver_CFLAGS 		= $(CHECK_CFLAGS)
 test_resolver_LDADD 		= $(CHECK_LDADD)

@@ -1,3 +1,0 @@
-taskset -c 0 ./httpd-minimal
-taskset -c 1 ./bin/pounce -c 1024 -t 1 -d 4 http://localhost
-requests 280150 rps, success 100.00%, latency 3420.08us/3540.98us/7653.68us/176.84us, usage 96.12% of 2.06Ghz
