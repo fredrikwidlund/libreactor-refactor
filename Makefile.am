@@ -4,6 +4,7 @@ AM_CFLAGS			= -std=gnu2x -g -O3 -flto -march=native -I$(srcdir)/src -fPIC
 AM_LDFLAGS			= -static
 
 SOURCE_FILES = \
+src/picohttpparser/picohttpparser.c \
 src/reactor/reactor.c \
 src/reactor/data.c \
 src/reactor/list.c \
@@ -11,9 +12,13 @@ src/reactor/buffer.c \
 src/reactor/vector.c \
 src/reactor/pool.c \
 src/reactor/resolver.c \
-src/reactor/timer.c
+src/reactor/timer.c \
+src/reactor/stream.c \
+src/reactor/http.c \
+src/reactor/server.c
 
 HEADER_FILES = \
+src/picohttpparser/picohttpparser.h \
 src/reactor/reactor.h \
 src/reactor/data.h \
 src/reactor/list.h \
@@ -21,7 +26,10 @@ src/reactor/buffer.h \
 src/reactor/vector.h \
 src/reactor/pool.h \
 src/reactor/resolver.h \
-src/reactor/timer.h
+src/reactor/timer.h \
+src/reactor/stream.h \
+src/reactor/http.h \
+src/reactor/server.h
 
 lib_LTLIBRARIES 		= libreactor.la
 libreactor_la_SOURCES 		= $(SOURCE_FILES) $(HEADER_FILES)
@@ -67,5 +75,9 @@ test_resolver_LDADD 		= $(CHECK_LDADD)
 check_PROGRAMS			+= test/timer
 test_timer_CFLAGS 		= $(CHECK_CFLAGS)
 test_timer_LDADD 		= $(CHECK_LDADD)
+
+check_PROGRAMS			+= test/stream
+test_stream_CFLAGS 		= $(CHECK_CFLAGS)
+test_stream_LDADD 		= $(CHECK_LDADD)
 
 TESTS 				= $(check_PROGRAMS) test/valgrind.sh test/coverage.sh

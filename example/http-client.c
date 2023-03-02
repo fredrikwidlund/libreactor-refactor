@@ -88,7 +88,7 @@ int main()
   struct state state = {.seconds = 5};
   struct addrinfo *ai = resolve_address("127.0.0.1", "80");
   struct timespec tv = {.tv_sec = state.seconds};
-  int i, n = 1024;
+  int i, n = 256;
 
   reactor_construct();
   printf("running %d clients for %d seconds\n", n, state.seconds);

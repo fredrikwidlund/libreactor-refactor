@@ -75,5 +75,6 @@ reactor_id    reactor_fallocate(reactor_callback *, void *, int, int, uint64_t, 
 /* madvise */
 /* ... */
 reactor_id    reactor_close(reactor_callback *, void *, int);
+reactor_id    reactor_send_zerocopy(reactor_callback *, void *, int, const void *, size_t, int);
 
 #endif /* REACTOR_REACTOR_H */

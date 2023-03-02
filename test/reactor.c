@@ -348,6 +348,35 @@ static void test_connect(__attribute__((unused)) void **arg)
   close(c);
 }
 
+static void test_send_zerocopy(__attribute__((unused)) void **arg)
+{
+  struct state state = {.value = 0};
+  struct sockaddr_in sin;
+  socklen_t len = sizeof sin;
+  int s, c;
+
+  s = socket(AF_INET, SOCK_STREAM, 0);
+  assert(s >= 0);
+  assert(setsockopt(s, SOL_SOCKET, SO_REUSEPORT, (int[]) {1}, sizeof(int)) == 0);
+  assert(setsockopt(s, SOL_SOCKET, SO_REUSEADDR, (int[]) {1}, sizeof(int)) == 0);
+  assert(bind(s, (struct sockaddr *) (struct sockaddr_in[]) {{.sin_family = AF_INET}}, sizeof(struct sockaddr_in)) == 0);
+  assert(listen(s, INT_MAX) == 0);
+  assert(getsockname(s, (struct sockaddr *) &sin, &len) == 0);
+
+  c = socket(AF_INET, SOCK_STREAM, 0);
+  assert(c >= 0);
+
+  reactor_connect(callback, &state, c, (struct sockaddr *) &sin, len);
+  reactor_loop_once();
+  assert_int_equal(state.calls, 1);
+  state.value = 4;
+  reactor_send_zerocopy(callback, &state, c, "test", 4, 0);
+  reactor_loop();
+  assert_int_equal(state.calls, 2);
+  close(s);
+  close(c);
+}
+
 static void test_fallocate(__attribute__((unused)) void **arg)
 {
   struct state state = {.value = 0};
@@ -396,6 +425,7 @@ int main()
       cmocka_unit_test(test_connect),
       cmocka_unit_test(test_fallocate),
       cmocka_unit_test(test_close),
+      cmocka_unit_test(test_send_zerocopy),
       cmocka_unit_test(test_destruct)
     };
 

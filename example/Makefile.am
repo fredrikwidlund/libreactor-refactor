@@ -10,8 +10,8 @@ next \
 async \
 lookup \
 timer \
-queue
+queue \
+server \
+cancel
 
-#tls_server_raw_LDADD	= $(LDADD) -lssl -lcrypto
-
-MAINTAINERCLEANFILES 	= Makefile.in
+MAINTAINERCLEANFILES 		= Makefile.in

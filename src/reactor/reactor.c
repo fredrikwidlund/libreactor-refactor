@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <stdbool.h>
 #include <assert.h>
 #include <unistd.h>
 #include <threads.h>
@@ -270,9 +271,9 @@ void reactor_loop_once(void)
       cqe = reactor_ring_cqe(&reactor.ring);
       if (!cqe)
         break;
-
       user = (reactor_user *) cqe->user_data;
-      reactor_call(user, REACTOR_CALL, cqe->res);
+      if (!(cqe->flags & IORING_CQE_F_NOTIF))
+        reactor_call(user, REACTOR_CALL, cqe->res);
       if (!(cqe->flags & IORING_CQE_F_MORE))
         reactor_free_user(user);
     }
@@ -291,7 +292,7 @@ void reactor_cancel(reactor_id id, reactor_callback *callback, void *state)
 
   *user = reactor_user_define(callback, state);
   if (!not_iouring)
-    reactor_async_cancel(NULL, NULL, (uint64_t) user);
+    (void) reactor_async_cancel(NULL, NULL, (uint64_t) user);
 }
 
 reactor_id reactor_async(reactor_callback *callback, void *state)
@@ -324,8 +325,9 @@ reactor_id reactor_async_cancel(reactor_callback *callback, void *state, uint64_
 
   *reactor_ring_sqe(&reactor.ring) = (struct io_uring_sqe)
     {
+      .opcode = IORING_OP_ASYNC_CANCEL,
       .addr = (uintptr_t) user_data,
-      .user_data = (uint64_t) user
+      .user_data = (uint64_t) user,
     };
 
   return (reactor_id) user;
@@ -663,6 +665,23 @@ reactor_id reactor_close(reactor_callback *callback, void *state, int fd)
     {
       .fd = fd,
       .opcode = IORING_OP_CLOSE,
+      .user_data = (uint64_t) user
+    };
+
+  return (reactor_id) user;
+}
+
+reactor_id reactor_send_zerocopy(reactor_callback *callback, void *state, int fd, const void *base, size_t size, int flags)
+{
+  reactor_user *user = reactor_alloc_user(callback, state);
+
+  *reactor_ring_sqe(&reactor.ring) = (struct io_uring_sqe)
+    {
+      .fd = fd,
+      .opcode = IORING_OP_SEND_ZC,
+      .addr = (uintptr_t) base,
+      .msg_flags = flags,
+      .len = size,
       .user_data = (uint64_t) user
     };
 
