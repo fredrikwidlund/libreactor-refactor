@@ -100,4 +100,8 @@ check_PROGRAMS			+= test/stream
 test_stream_CFLAGS 		= $(CHECK_CFLAGS)
 test_stream_LDADD 		= $(CHECK_LDADD)
 
+check_PROGRAMS			+= test/http
+test_http_CFLAGS 		= $(CHECK_CFLAGS)
+test_http_LDADD 		= $(CHECK_LDADD)
+
 TESTS 				= $(check_PROGRAMS) test/valgrind.sh test/coverage.sh

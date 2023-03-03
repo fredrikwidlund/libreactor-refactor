@@ -1,6 +1,6 @@
 #!/bin/sh
 
-for file in reactor data list buffer vector pool resolver timer stream
+for file in reactor data list buffer vector pool resolver timer stream http
 do
     echo [$file]
     test=`gcov -b src/reactor/libreactor_test_a-$file | grep -A4 File.*$file`
