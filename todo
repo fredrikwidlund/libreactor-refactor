@@ -1,5 +1,6 @@
-* stream optionally close fd?
-* server
+* http tests
+* server test
+
 * notify
 * event
 * reader/writer
@@ -8,3 +9,7 @@
 * keep thread states in reactor list
 * pool tests
 * dynamic primitives
+
+* stream optionally close fd?
+* server dynamic field count?
+* server maximum request size?

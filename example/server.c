@@ -42,7 +42,12 @@ static void server_callback(reactor_event *event)
   server_request *request = (server_request *) event->data;
   struct task *task;
 
-  if (data_equal(request->target, data_string("/wait")))
+  if (data_equal(request->method, data_string("POST")))
+  {
+    printf("POST -> [%.*s]\n", (int) data_size(request->body), (char *) data_base(request->body));
+    server_respond(request, data_string("204 No Content"), data_null(), data_null());
+  }
+  else if (data_equal(request->target, data_string("/wait")))
   {
     task = malloc(sizeof *task);
     task->request = request;

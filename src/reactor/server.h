@@ -28,8 +28,10 @@ struct server_request
   stream         stream;
   bool          *abort;
   bool           in_progress;
+
   data           method;
   data           target;
+  data           body;
   http_field     fields[16];
   size_t         fields_count;
 };

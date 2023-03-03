@@ -22,6 +22,10 @@ static void test_data(__attribute__((unused)) void **arg)
   assert_true(data_equal(data_string("test"), data_string("test")));
   assert_false(data_equal(data_string("test1"), data_string("test2")));
   assert_false(data_equal(data_string("test"), data_string("test2")));
+
+  assert_true(data_equal_case(data_string("TeSt"), data_string("test")));
+  assert_false(data_equal_case(data_string("TeSta"), data_string("test")));
+  assert_false(data_equal_case(data_string("TeSa"), data_string("test")));
 }
 
 int main()

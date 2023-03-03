@@ -12,7 +12,8 @@ struct http_field
   data value;
 };
 
-int  http_read_request(data, data *, data *, http_field *, size_t *);
+data http_field_lookup(http_field *, size_t, data);
+int  http_read_request(data, data *, data *, http_field *, size_t *, data *);
 void http_write_response(buffer *, data, data, data, data);
 
 #endif /* REACTOR_HTTP_H_INCLUDED */

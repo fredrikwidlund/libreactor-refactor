@@ -1,3 +1,4 @@
+#include <stdio.h>
 #include <string.h>
 
 #include "picohttpparser/picohttpparser.h"
@@ -59,12 +60,12 @@ static void utility_push_byte(void **pointer, uint8_t byte)
   utility_move(pointer, 1);
 }
 
-http_field http_field_define(data name, data value)
+static http_field http_field_define(data name, data value)
 {
   return (http_field) {.name = name, .value = value};
 }
 
-void http_push_field(void **pointer, http_field field)
+static void http_push_field(void **pointer, http_field field)
 {
   utility_push_data(pointer, field.name);
   utility_push_byte(pointer, ':');
@@ -74,9 +75,64 @@ void http_push_field(void **pointer, http_field field)
   utility_push_byte(pointer, '\n');
 }
 
-int http_read_request(data buffer, data *method, data *target, http_field *fields, size_t *fields_count)
+static size_t http_chunk(data input, data *chunk)
+{
+  char *end;
+  size_t chunk_size, n;
+
+  end = memchr(data_base(input), '\n', data_size(input));
+  if (!end)
+    return 0;
+  chunk_size = strtoull(data_base(input), NULL, 16);
+  *chunk = data_define(end + 1, chunk_size);
+  n = (char *) data_base(*chunk) + data_size(*chunk) + 2 - (char *) data_base(input);
+  if (data_size(input) < n)
+    return 0;
+  return n;
+}
+
+static size_t http_dechunk(data input, data *dechunked)
+{
+  data chunk;
+  size_t n, offset;
+
+  offset = 0;
+  do
+  {
+    n = http_chunk(data_offset(input, offset), &chunk);
+    if (n == 0)
+      return 0;
+    offset += n;
+  } while (data_size(chunk));
+
+  *dechunked = data_define(data_base(input), 0);
+  offset = 0;
+  do
+  {
+    n = http_chunk(data_offset(input, offset), &chunk);
+    offset += n;
+    memmove((char *) data_base(*dechunked) + data_size(*dechunked), data_base(chunk), data_size(chunk));
+    dechunked->size += chunk.size;
+  } while (data_size(chunk));
+
+  return offset;
+}
+
+data http_field_lookup(http_field *fields, size_t fields_count, data name)
+{
+  size_t i;
+
+  for (i = 0; i < fields_count; i++)
+    if (data_equal_case(fields[i].name, name))
+      return fields[i].value;
+  return data_null();
+ }
+
+int http_read_request(data buffer, data *method, data *target, http_field *fields, size_t *fields_count, data *body)
 {
   int n, minor_version;
+  data encoding, length;
+  size_t size;
 
   n = phr_parse_request(data_base(buffer), data_size(buffer),
                         (const char **) &method->base, &method->size,
@@ -84,7 +140,38 @@ int http_read_request(data buffer, data *method, data *target, http_field *field
                         &minor_version,
                         (struct phr_header *) fields, fields_count, 0);
   asm volatile("": : :"memory");
-  return n;
+
+  if (data_equal(*method, data_string("GET")) || n < 0)
+    return n;
+
+  encoding = http_field_lookup(fields, *fields_count, data_string("Transfer-Encoding"));
+  length = http_field_lookup(fields, *fields_count, data_string("Content-Length"));
+
+  /* content-length format */
+  if (!data_empty(length))
+  {
+    if (!data_empty(encoding))
+      return -1;
+    size = strtoull(data_base(length), NULL, 10);
+    if (data_size(buffer) < n + size)
+      return -2;
+    *body = data_define((char *) data_base(buffer) + n, size);
+    return n + size;
+  }
+
+  /* chunked format */
+  if (!data_empty(encoding))
+  {
+    if (!data_equal_case(encoding, data_string("Chunked")))
+      return -1;
+    size = http_dechunk(data_offset(buffer, n), body);
+    if (!size)
+      return -2;
+    return n + size;
+  }
+
+  /* undefined size */
+  return -1;
 }
 
 void http_write_response(buffer *buffer, data status, data date, data type, data body)

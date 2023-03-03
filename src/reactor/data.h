@@ -19,6 +19,7 @@ const void *data_base(data);
 size_t      data_size(data);
 bool        data_empty(data);
 bool        data_equal(data, data);
+bool        data_equal_case(data, data);
 data        data_null(void);
 data        data_string(const char *);
 data        data_offset(data, size_t);

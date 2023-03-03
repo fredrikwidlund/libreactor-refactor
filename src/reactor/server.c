@@ -51,7 +51,8 @@ static void server_parse(server_request *request)
 
   input = data_offset(stream_data(&request->stream), request->stream_offset);
   request->fields_count = sizeof request->fields / sizeof request->fields[0];
-  n = http_read_request(input, &request->method, &request->target, request->fields, &request->fields_count);
+  n = http_read_request(input, &request->method, &request->target, request->fields, &request->fields_count, &request->body);
+  // XXX increase number of fields of -1 and count == max?
   if (n == -1)
     server_disconnect(request);
   else if (n == -2)

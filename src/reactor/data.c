@@ -29,6 +29,11 @@ bool data_equal(data data1, data data2)
   return data_size(data1) == data_size(data2) && memcmp(data_base(data1), data_base(data2), data_size(data1)) == 0;
 }
 
+bool data_equal_case(data data1, data data2)
+{
+  return data_size(data1) == data_size(data2) && strncasecmp(data_base(data1), data_base(data2), data_size(data1)) == 0;
+}
+
 data data_string(const char *string)
 {
   return data_define(string, strlen(string));
