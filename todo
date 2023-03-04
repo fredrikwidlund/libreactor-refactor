@@ -1,15 +1,9 @@
-* http tests
-* server test
-
 * notify
 * event
-* reader/writer
 * queue
-* async resolver state
 * keep thread states in reactor list
-* pool tests
 * dynamic primitives
-
 * stream optionally close fd?
 * server dynamic field count?
 * server maximum request size?
+* async resolver state?

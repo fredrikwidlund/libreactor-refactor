@@ -39,6 +39,7 @@ struct server_request
 void server_construct(server *, reactor_callback *, void *);
 void server_destruct(server *);
 void server_open(server *, int);
+void server_accept(server *, int);
 void server_close(server *);
 void server_respond(server_request *, data, data, data);
 void server_disconnect(server_request *);

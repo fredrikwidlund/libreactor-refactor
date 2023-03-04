@@ -4,8 +4,7 @@
 
 #include "../reactor.h"
 
-static void server_accept(server *);
-static void server_parse(server_request *);
+static void server_accept_next(server *);
 
 static void server_date_update(server *server)
 {
@@ -101,22 +100,14 @@ static void server_stream_callback(reactor_event *event)
 static void server_accept_callback(reactor_event *event)
 {
   server *server = event->state;
-  server_request *request;
   int fd = event->data;
 
   server->accept = 0;
-  if (fd >= 0)
-  {
-    request = list_push_back(&server->requests, NULL, sizeof *request);
-    *request = (server_request) {.server = server};
-    stream_construct(&request->stream, server_stream_callback, request);
-    stream_open(&request->stream, fd, STREAM_TYPE_SOCKET);
-    server_read(request);
-  }
-  server_accept(server);
+  server_accept(server, fd);
+  server_accept_next(server);
 }
 
-static void server_accept(server *server)
+static void server_accept_next(server *server)
 {
   assert(server->accept == 0);
   server->accept = reactor_accept(server_accept_callback, server, server->fd, NULL, NULL, 0);
@@ -138,7 +129,20 @@ void server_destruct(server *server)
 void server_open(server *server, int fd)
 {
   server->fd = fd;
-  server_accept(server);
+  server_accept_next(server);
+}
+
+void server_accept(server *server, int fd)
+{
+  server_request *request;
+
+  if (fd < 0)
+    return;
+  request = list_push_back(&server->requests, NULL, sizeof *request);
+  *request = (server_request) {.server = server};
+  stream_construct(&request->stream, server_stream_callback, request);
+  stream_open(&request->stream, fd, STREAM_TYPE_SOCKET);
+  server_read(request);
 }
 
 void server_close(server *server)
@@ -146,11 +150,9 @@ void server_close(server *server)
   if (server->fd == -1)
     return;
 
-  if (server->accept)
-  {
-    reactor_cancel(server->accept, NULL, NULL);
-    server->accept = 0;
-  }
+  assert(server->accept);
+  reactor_cancel(server->accept, NULL, NULL);
+  server->accept = 0;
   (void) reactor_close(NULL, NULL, server->fd);
   server->fd = -1;
 
