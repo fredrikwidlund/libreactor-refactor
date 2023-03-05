@@ -15,6 +15,10 @@ extern void mock_assert(const int result, const char* const expression,
 #define REACTOR_VERSION_PATCH 0
 
 #include "reactor/data.h"
+#include "reactor/hash.h"
+#include "reactor/map.h"
+#include "reactor/mapi.h"
+#include "reactor/maps.h"
 #include "reactor/list.h"
 #include "reactor/buffer.h"
 #include "reactor/vector.h"

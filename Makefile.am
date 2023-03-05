@@ -7,6 +7,10 @@ SOURCE_FILES = \
 src/picohttpparser/picohttpparser.c \
 src/reactor/reactor.c \
 src/reactor/data.c \
+src/reactor/hash.c \
+src/reactor/map.c \
+src/reactor/mapi.c \
+src/reactor/maps.c \
 src/reactor/list.c \
 src/reactor/buffer.c \
 src/reactor/vector.c \
@@ -22,6 +26,10 @@ HEADER_FILES = \
 src/picohttpparser/picohttpparser.h \
 src/reactor/reactor.h \
 src/reactor/data.h \
+src/reactor/hash.h \
+src/reactor/map.h \
+src/reactor/mapi.h \
+src/reactor/maps.h \
 src/reactor/list.h \
 src/reactor/buffer.h \
 src/reactor/vector.h \
@@ -73,6 +81,22 @@ test_reactor_LDADD 		= $(CHECK_LDADD)
 check_PROGRAMS			+= test/data
 test_data_CFLAGS 		= $(CHECK_CFLAGS)
 test_data_LDADD 		= $(CHECK_LDADD)
+
+check_PROGRAMS			+= test/hash
+test_hash_CFLAGS 		= $(CHECK_CFLAGS)
+test_hash_LDADD 		= $(CHECK_LDADD)
+
+check_PROGRAMS			+= test/map
+test_map_CFLAGS 		= $(CHECK_CFLAGS)
+test_map_LDADD 			= $(CHECK_LDADD)
+
+check_PROGRAMS			+= test/mapi
+test_mapi_CFLAGS 		= $(CHECK_CFLAGS)
+test_mapi_LDADD 		= $(CHECK_LDADD)
+
+check_PROGRAMS			+= test/maps
+test_maps_CFLAGS 		= $(CHECK_CFLAGS)
+test_maps_LDADD 		= $(CHECK_LDADD)
 
 check_PROGRAMS			+= test/list
 test_list_CFLAGS 		= $(CHECK_CFLAGS)
