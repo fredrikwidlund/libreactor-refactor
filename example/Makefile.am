@@ -12,6 +12,7 @@ lookup \
 timer \
 queue \
 server \
-cancel
+cancel \
+event
 
 MAINTAINERCLEANFILES 		= Makefile.in

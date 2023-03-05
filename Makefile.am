@@ -12,6 +12,7 @@ src/reactor/buffer.c \
 src/reactor/vector.c \
 src/reactor/pool.c \
 src/reactor/resolver.c \
+src/reactor/event.c \
 src/reactor/timer.c \
 src/reactor/stream.c \
 src/reactor/http.c \
@@ -26,6 +27,7 @@ src/reactor/buffer.h \
 src/reactor/vector.h \
 src/reactor/pool.h \
 src/reactor/resolver.h \
+src/reactor/event.h \
 src/reactor/timer.h \
 src/reactor/stream.h \
 src/reactor/http.h \
@@ -107,5 +109,9 @@ test_http_LDADD 		= $(CHECK_LDADD)
 check_PROGRAMS			+= test/server
 test_server_CFLAGS 		= $(CHECK_CFLAGS)
 test_server_LDADD 		= $(CHECK_LDADD)
+
+check_PROGRAMS			+= test/event
+test_event_CFLAGS 		= $(CHECK_CFLAGS)
+test_event_LDADD 		= $(CHECK_LDADD)
 
 TESTS 				= $(check_PROGRAMS) test/valgrind.sh test/coverage.sh
