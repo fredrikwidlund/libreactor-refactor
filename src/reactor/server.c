@@ -13,7 +13,7 @@ static void server_date_update(server *server)
   static const char *days[] = {"Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"};
   static const char *months[] = {"Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"};
 
-  t = time(NULL);
+  t = (reactor_now() + 10000000) / 1000000000;
   (void) gmtime_r(&t, &tm);
   (void) strftime(server->date_string, sizeof server->date_string, "---, %d --- %Y %H:%M:%S GMT", &tm);
   memcpy(server->date_string, days[tm.tm_wday], 3);
@@ -107,6 +107,13 @@ static void server_accept_callback(reactor_event *event)
   server_accept_next(server);
 }
 
+static void server_timer_callback(reactor_event *event)
+{
+  server *server = event->state;
+
+  server_date_update(server);
+}
+
 static void server_accept_next(server *server)
 {
   assert(server->accept == 0);
@@ -117,18 +124,21 @@ void server_construct(server *server, reactor_callback *callback, void *state)
 {
   *server = (struct server) {.user = reactor_user_define(callback, state), .fd = -1};
   list_construct(&server->requests);
-  server_date_update(server);
+  timer_construct(&server->timer, server_timer_callback, server);
 }
 
 void server_destruct(server *server)
 {
   server_close(server);
+  timer_destruct(&server->timer);
   list_destruct(&server->requests, NULL);
 }
 
 void server_open(server *server, int fd)
 {
   server->fd = fd;
+  timer_set(&server->timer, ((reactor_now() / 1000000000) * 1000000000), 1000000000);
+  server_date_update(server);
   server_accept_next(server);
 }
 
@@ -158,6 +168,8 @@ void server_close(server *server)
 
   while (!list_empty(&server->requests))
     server_disconnect(list_front(&server->requests));
+
+  timer_clear(&server->timer);
 }
 
 void server_respond(server_request *request, data status, data type, data body)

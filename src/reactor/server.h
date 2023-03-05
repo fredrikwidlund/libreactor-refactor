@@ -17,6 +17,7 @@ struct server
   int            fd;
   reactor_id     accept;
   list           requests;
+  timer          timer;
   char           date_string[30];
   data           date;
 };
