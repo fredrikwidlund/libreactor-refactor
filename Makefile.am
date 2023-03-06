@@ -7,6 +7,7 @@ SOURCE_FILES = \
 src/picohttpparser/picohttpparser.c \
 src/reactor/reactor.c \
 src/reactor/data.c \
+src/reactor/object.c \
 src/reactor/hash.c \
 src/reactor/map.c \
 src/reactor/mapi.c \
@@ -27,6 +28,7 @@ HEADER_FILES = \
 src/picohttpparser/picohttpparser.h \
 src/reactor/reactor.h \
 src/reactor/data.h \
+src/reactor/object.h \
 src/reactor/hash.h \
 src/reactor/map.h \
 src/reactor/mapi.h \
@@ -83,6 +85,10 @@ test_reactor_LDADD 		= $(CHECK_LDADD)
 check_PROGRAMS			+= test/data
 test_data_CFLAGS 		= $(CHECK_CFLAGS)
 test_data_LDADD 		= $(CHECK_LDADD)
+
+check_PROGRAMS			+= test/object
+test_object_CFLAGS 		= $(CHECK_CFLAGS)
+test_object_LDADD 		= $(CHECK_LDADD)
 
 check_PROGRAMS			+= test/hash
 test_hash_CFLAGS 		= $(CHECK_CFLAGS)
