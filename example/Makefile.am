@@ -13,6 +13,7 @@ timer \
 queue \
 server \
 cancel \
-event
+event \
+notify
 
 MAINTAINERCLEANFILES 		= Makefile.in

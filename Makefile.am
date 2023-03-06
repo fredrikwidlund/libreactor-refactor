@@ -19,6 +19,7 @@ src/reactor/resolver.c \
 src/reactor/event.c \
 src/reactor/timer.c \
 src/reactor/stream.c \
+src/reactor/notify.c \
 src/reactor/http.c \
 src/reactor/server.c
 
@@ -38,6 +39,7 @@ src/reactor/resolver.h \
 src/reactor/event.h \
 src/reactor/timer.h \
 src/reactor/stream.h \
+src/reactor/notify.h \
 src/reactor/http.h \
 src/reactor/server.h
 
@@ -125,6 +127,10 @@ test_timer_LDADD 		= $(CHECK_LDADD)
 check_PROGRAMS			+= test/stream
 test_stream_CFLAGS 		= $(CHECK_CFLAGS)
 test_stream_LDADD 		= $(CHECK_LDADD)
+
+check_PROGRAMS			+= test/notify
+test_notify_CFLAGS 		= $(CHECK_CFLAGS)
+test_notify_LDADD 		= $(CHECK_LDADD)
 
 check_PROGRAMS			+= test/http
 test_http_CFLAGS 		= $(CHECK_CFLAGS)

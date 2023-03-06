@@ -28,6 +28,7 @@ extern void mock_assert(const int result, const char* const expression,
 #include "reactor/event.h"
 #include "reactor/timer.h"
 #include "reactor/stream.h"
+#include "reactor/notify.h"
 #include "reactor/http.h"
 #include "reactor/server.h"
 
