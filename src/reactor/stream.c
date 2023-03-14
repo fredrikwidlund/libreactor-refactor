@@ -114,20 +114,12 @@ int stream_fd(stream *stream)
 
 static void stream_release_buffer(reactor_event *event)
 {
-  buffer *buffer = event->state;
-
-  buffer_destruct(buffer);
-  free(buffer);
+  free(event->state);
 }
 
-static void stream_cancel_io(reactor_id id, buffer *current_buffer)
+static void stream_cancel_io(reactor_id id, buffer *buffer)
 {
-  buffer *buffer;
-
-  buffer = malloc(sizeof *buffer);
-  *buffer = *current_buffer;
-  buffer_construct(current_buffer);
-  reactor_cancel(id, stream_release_buffer, buffer);
+  reactor_cancel(id, stream_release_buffer, buffer_deconstruct(buffer));
 }
 
 void stream_close(stream *stream)
