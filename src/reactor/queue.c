@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <stdbool.h>
 #include <unistd.h>
 #include <errno.h>
 #include <assert.h>
@@ -15,25 +16,24 @@ static void queue_cancel(reactor_event *event)
 
 void queue_construct(queue *queue, size_t element_size)
 {
-  *queue = (struct queue) {.fd = {-1, -1}, .element_size = element_size};
+  *queue = (struct queue) {.element_size = element_size};
   assert(pipe(queue->fd) == 0);
 }
 
 void queue_destruct(queue *queue)
 {
-  if (queue->fd[0] >= 0)
-  {
-    (void) close(queue->fd[0]);
-    (void) close(queue->fd[1]);
-  }
-  queue_construct(queue, 0);
+  (void) close(queue->fd[0]);
+  (void) close(queue->fd[1]);
 }
 
 /* queue producer */
 
 static void queue_producer_update(queue_producer *);
 
-static void queue_producer_write(reactor_event *event)
+#ifndef UNIT_TESTING
+static
+#endif
+void queue_producer_write(reactor_event *event)
 {
   queue_producer *producer = event->state;
   int result = event->data;
@@ -75,8 +75,7 @@ static void queue_producer_update(queue_producer *producer)
   if (size > size_max)
     size = size_max;
   producer->write = reactor_write(queue_producer_write, producer, producer->queue->fd[1],
-                                  (char *) buffer_base(&producer->output) + producer->output_offset,
-                                  buffer_size(&producer->output) - producer->output_offset, 0);
+                                  (char *) buffer_base(&producer->output) + producer->output_offset, size, 0);
 }
 
 void queue_producer_construct(queue_producer *producer)
@@ -126,10 +125,14 @@ void queue_producer_close(queue_producer *producer)
 
 static void queue_consumer_update(queue_consumer *);
 
-  static void queue_consumer_read(reactor_event *event)
+#ifndef UNIT_TESTING
+static
+#endif
+void queue_consumer_read(reactor_event *event)
 {
   queue_consumer *consumer = event->state;
   int offset, result = event->data;
+  bool abort = false;
 
   consumer->read = 0;
   if (result == -EINTR)
@@ -139,7 +142,13 @@ static void queue_consumer_update(queue_consumer *);
   }
   assert(result > 0 && result % consumer->queue->element_size == 0);
   for (offset = 0; offset < result; offset += consumer->queue->element_size)
+  {
+    consumer->abort = &abort;
     reactor_call(&consumer->user, QUEUE_CONSUMER_POP, (uint64_t) buffer_base(&consumer->input) + offset);
+    if (abort)
+      return;
+    consumer->abort = NULL;
+  }
   queue_consumer_update(consumer);
 }
 
@@ -187,6 +196,8 @@ void queue_consumer_close(queue_consumer *consumer)
 {
   if (!consumer->queue)
     return;
+  if (consumer->abort)
+    *consumer->abort = true;
   consumer->queue = NULL;
   if (consumer->read)
   {

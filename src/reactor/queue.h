@@ -34,6 +34,7 @@ struct queue_consumer
   queue        *queue;
   buffer        input;
   reactor_id    read;
+  bool         *abort;
 };
 
 void  queue_construct(queue *, size_t);
