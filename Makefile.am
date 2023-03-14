@@ -20,6 +20,7 @@ src/reactor/resolver.c \
 src/reactor/event.c \
 src/reactor/timer.c \
 src/reactor/stream.c \
+src/reactor/queue.c \
 src/reactor/notify.c \
 src/reactor/http.c \
 src/reactor/server.c
@@ -41,6 +42,7 @@ src/reactor/resolver.h \
 src/reactor/event.h \
 src/reactor/timer.h \
 src/reactor/stream.h \
+src/reactor/queue.h \
 src/reactor/notify.h \
 src/reactor/http.h \
 src/reactor/server.h

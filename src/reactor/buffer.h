@@ -17,6 +17,7 @@ struct buffer
 /* constructor/destructor */
 void    buffer_construct(buffer *);
 void    buffer_destruct(buffer *);
+void   *buffer_deconstruct(buffer *);
 
 /* capacity */
 bool    buffer_empty(buffer *);

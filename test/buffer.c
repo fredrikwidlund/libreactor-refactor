@@ -12,6 +12,7 @@
 void test_buffer(__attribute__((unused)) void **state)
 {
   buffer b;
+  char *p;
 
   buffer_construct(&b);
   assert_int_equal(buffer_size(&b), 0);
@@ -42,6 +43,9 @@ void test_buffer(__attribute__((unused)) void **state)
   assert_string_equal(buffer_base(&b), "xxxxxfirst");
   buffer_insert_fill(&b, buffer_size(&b), 5, "x", 1);
   assert_string_equal(buffer_base(&b), "xxxxxfirst");
+
+  p = buffer_deconstruct(&b);
+  assert_string_equal(p, "xxxxxfirst");
 
   assert_true(buffer_allocate(&b, 256) != NULL);
   buffer_clear(&b);

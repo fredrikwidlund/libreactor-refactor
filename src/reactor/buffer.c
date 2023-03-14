@@ -30,6 +30,14 @@ void buffer_destruct(buffer *b)
   buffer_construct(b);
 }
 
+void *buffer_deconstruct(buffer *buffer)
+{
+  void *base = buffer->base;
+
+  buffer_construct(buffer);
+  return base;
+}
+
 /* capacity */
 
 bool buffer_empty(buffer *b)
