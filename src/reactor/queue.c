@@ -97,6 +97,17 @@ void queue_producer_open(queue_producer *producer, queue *queue)
   producer->queue = queue;
 }
 
+void queue_producer_push(queue_producer *producer, void *element)
+{
+  buffer_insert(&producer->output_queued, buffer_size(&producer->output_queued), element, producer->queue->element_size);
+  queue_producer_update(producer);
+}
+
+void queue_producer_push_sync(queue_producer *producer, void *element)
+{
+  assert(write(producer->queue->fd[1], element, producer->queue->element_size) == (ssize_t) producer->queue->element_size);
+}
+
 void queue_producer_close(queue_producer *producer)
 {
   if (!producer->queue)
@@ -109,17 +120,6 @@ void queue_producer_close(queue_producer *producer)
   }
   buffer_destruct(&producer->output);
   buffer_destruct(&producer->output_queued);
-}
-
-void queue_producer_push(queue_producer *producer, void *element)
-{
-  buffer_insert(&producer->output_queued, buffer_size(&producer->output_queued), element, producer->queue->element_size);
-  queue_producer_update(producer);
-}
-
-void queue_producer_push_sync(queue_producer *producer, void *element)
-{
-  assert(write(producer->queue->fd[1], element, producer->queue->element_size) == (ssize_t) producer->queue->element_size);
 }
 
 /* queue consumer */
@@ -137,8 +137,6 @@ static void queue_consumer_update(queue_consumer *);
     queue_consumer_update(consumer);
     return;
   }
-  if (result <= 0 || result % consumer->queue->element_size != 0)
-    printf("read %d\n", result);
   assert(result > 0 && result % consumer->queue->element_size == 0);
   for (offset = 0; offset < result; offset += consumer->queue->element_size)
     reactor_call(&consumer->user, QUEUE_CONSUMER_POP, (uint64_t) buffer_base(&consumer->input) + offset);
@@ -169,7 +167,20 @@ void queue_consumer_open(queue_consumer *consumer, queue *queue, size_t batch_si
 {
   consumer->queue = queue;
   buffer_resize(&consumer->input, queue->element_size * batch_size);
+}
+
+void queue_consumer_pop(queue_consumer *consumer)
+{
   queue_consumer_update(consumer);
+}
+
+void *queue_consumer_pop_sync(queue_consumer *consumer)
+{
+  void *element = buffer_base(&consumer->input);
+
+  assert(read(consumer->queue->fd[0], element, consumer->queue->element_size) ==
+         (ssize_t) consumer->queue->element_size);
+  return element;
 }
 
 void queue_consumer_close(queue_consumer *consumer)

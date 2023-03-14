@@ -136,6 +136,10 @@ check_PROGRAMS			+= test/stream
 test_stream_CFLAGS 		= $(CHECK_CFLAGS)
 test_stream_LDADD 		= $(CHECK_LDADD)
 
+check_PROGRAMS			+= test/queue
+test_queue_CFLAGS 		= $(CHECK_CFLAGS)
+test_queue_LDADD 		= $(CHECK_LDADD)
+
 check_PROGRAMS			+= test/notify
 test_notify_CFLAGS 		= $(CHECK_CFLAGS)
 test_notify_LDADD 		= $(CHECK_LDADD)

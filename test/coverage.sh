@@ -1,6 +1,6 @@
 #!/bin/sh
 
-for file in reactor data object hash map mapi maps list buffer vector pool resolver event timer stream notify http server
+for file in reactor data object hash map mapi maps list buffer vector pool resolver event timer stream queue notify http server
 do
     echo [$file]
     test=`gcov -b src/reactor/libreactor_test_a-$file | grep -A4 File.*$file`

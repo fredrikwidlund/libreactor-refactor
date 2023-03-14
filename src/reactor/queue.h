@@ -36,19 +36,21 @@ struct queue_consumer
   reactor_id    read;
 };
 
-void queue_construct(queue *, size_t);
-void queue_destruct(queue *);
+void  queue_construct(queue *, size_t);
+void  queue_destruct(queue *);
 
-void queue_producer_construct(queue_producer *);
-void queue_producer_destruct(queue_producer *);
-void queue_producer_open(queue_producer *, queue *);
-void queue_producer_close(queue_producer *);
-void queue_producer_push(queue_producer *, void *);
-void queue_producer_push_sync(queue_producer *, void *);
+void  queue_producer_construct(queue_producer *);
+void  queue_producer_destruct(queue_producer *);
+void  queue_producer_open(queue_producer *, queue *);
+void  queue_producer_push(queue_producer *, void *);
+void  queue_producer_push_sync(queue_producer *, void *);
+void  queue_producer_close(queue_producer *);
 
-void queue_consumer_construct(queue_consumer *, reactor_callback *, void *);
-void queue_consumer_destruct(queue_consumer *);
-void queue_consumer_open(queue_consumer *, queue *, size_t);
-void queue_consumer_close(queue_consumer *);
+void  queue_consumer_construct(queue_consumer *, reactor_callback *, void *);
+void  queue_consumer_destruct(queue_consumer *);
+void  queue_consumer_open(queue_consumer *, queue *, size_t);
+void  queue_consumer_pop(queue_consumer *);
+void *queue_consumer_pop_sync(queue_consumer *);
+void  queue_consumer_close(queue_consumer *);
 
 #endif /* REACTOR_QUEUE_H_INCLUDED */
